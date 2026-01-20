@@ -201,6 +201,7 @@ class OrderResource extends Resource
             'index' => Pages\ListOrders::route('/'),
             'create' => Pages\CreateOrder::route('/create'),
             'edit' => Pages\EditOrder::route('/{record}/edit'),
+            'pos' => Pages\PosPage::route('/pos'), // Includes the POS page link
         ];
     }
 }

@@ -23,6 +23,7 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
+                // LEFT COLUMN (Main Info)
                 Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make('Product Information')->schema([
                         Forms\Components\TextInput::make('name')
@@ -58,7 +59,10 @@ class ProductResource extends Resource
                     ])
                 ])->columnSpan(2),
 
+                // RIGHT COLUMN (Settings & Marketing)
                 Forms\Components\Group::make()->schema([
+                    
+                    // 1. PRICING
                     Forms\Components\Section::make('Pricing')->schema([
                         Forms\Components\TextInput::make('price')
                             ->numeric()
@@ -71,23 +75,59 @@ class ProductResource extends Resource
 
                         Forms\Components\TextInput::make('cost_price')
                             ->numeric()
-                            ->helperText('Only visible to admins')
+                            ->helperText('Visible only to admins')
                             ->prefix('KES'),
                     ]),
 
+                    // 2. MARKETING (NEW SECTION ADDED)
+                    Forms\Components\Section::make('Marketing & Visibility')->schema([
+                        Forms\Components\Grid::make(2)->schema([
+                            Forms\Components\Toggle::make('is_hot')
+                                ->label('Hot Selling')
+                                ->onColor('danger'),
+                            
+                            Forms\Components\Toggle::make('is_new')
+                                ->label('New Arrival')
+                                ->default(true)
+                                ->onColor('success'),
+
+                            Forms\Components\Toggle::make('is_sponsored')
+                                ->label('Sponsored Item')
+                                ->onColor('warning'),
+                        ]),
+
+                        Forms\Components\TextInput::make('discount_percent')
+                            ->label('Discount %')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->suffix('%'),
+
+                        Forms\Components\TextInput::make('affiliate_link')
+                            ->label('External Link')
+                            ->placeholder('https://partner-site.com')
+                            ->url()
+                            ->visible(fn (Forms\Get $get) => $get('is_sponsored')),
+                    ]),
+
+                    // 3. ASSOCIATIONS
                     Forms\Components\Section::make('Associations')->schema([
                         Forms\Components\Select::make('category_id')
                             ->relationship('category', 'name')
-                            ->required(),
+                            ->required()
+                            ->searchable()
+                            ->preload(),
 
                         Forms\Components\Select::make('brand_id')
-                            ->relationship('brand', 'name'),
+                            ->relationship('brand', 'name')
+                            ->searchable(),
                     ]),
 
+                    // 4. INVENTORY
                     Forms\Components\Section::make('Inventory')->schema([
                         Forms\Components\TextInput::make('sku')
-                            ->label('SKU (Stock Keeping Unit)')
-                            ->default('ORB-' . random_int(10000, 99999))
+                            ->label('SKU')
+                            ->default(fn () => 'ORB-' . random_int(10000, 99999))
                             ->required(),
 
                         Forms\Components\TextInput::make('stock_quantity')
@@ -96,9 +136,11 @@ class ProductResource extends Resource
                             ->default(0),
 
                         Forms\Components\Toggle::make('is_active')
+                            ->label('Visible on Website')
                             ->default(true),
                         
                         Forms\Components\Toggle::make('is_featured')
+                            ->label('Pin to Homepage')
                             ->default(false),
                     ])
                 ])->columnSpan(1)
@@ -112,32 +154,51 @@ class ProductResource extends Resource
                 Tables\Columns\ImageColumn::make('images')
                     ->circular()
                     ->stacked()
-                    ->limit(1), // Show only 1 image in table preview
+                    ->limit(1), 
                 
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable()
-                    ->weight('bold'),
+                    ->weight('bold')
+                    ->description(fn (Product $record) => Str::limit($record->description, 30)),
                 
                 Tables\Columns\TextColumn::make('category.name')
                     ->sortable()
-                    ->searchable()
-                    ->badge(),
+                    ->badge()
+                    ->color('info'),
 
                 Tables\Columns\TextColumn::make('price')
                     ->money('KES')
                     ->sortable(),
 
+                // Marketing Badges
+                Tables\Columns\IconColumn::make('is_hot')
+                    ->label('Hot')
+                    ->boolean()
+                    ->trueColor('danger')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('discount_percent')
+                    ->label('Discount')
+                    ->formatStateUsing(fn ($state) => $state ? "-{$state}%" : '-')
+                    ->badge()
+                    ->color('warning')
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('stock_quantity')
                     ->label('Stock')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->color(fn ($state) => $state < 10 ? 'danger' : 'success'),
 
                 Tables\Columns\ToggleColumn::make('is_active'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('category')
                     ->relationship('category', 'name'),
+                
+                Tables\Filters\TernaryFilter::make('is_hot')->label('Hot Selling'),
+                Tables\Filters\TernaryFilter::make('is_new')->label('New Arrivals'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
