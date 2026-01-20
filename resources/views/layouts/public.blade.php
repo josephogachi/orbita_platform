@@ -15,7 +15,6 @@
 </head>
 <body class="bg-orbita-light text-gray-900 antialiased overflow-x-hidden selection:bg-orbita-gold selection:text-white flex flex-col min-h-screen">
 
-    @php $settings = \App\Models\ShopSetting::first(); @endphp
     <div class="bg-orbita-blue text-white text-xs font-semibold relative overflow-hidden border-b border-white/10">
         <div class="container mx-auto px-4 py-2 flex flex-col md:flex-row justify-between items-center gap-2 relative z-10">
             <div class="flex items-center gap-4 text-white/80">
@@ -29,7 +28,7 @@
                 </span>
             </div>
             
-            @if($settings && $settings->show_countdown && $settings->countdown_end)
+            @if(isset($settings) && $settings->show_countdown && $settings->countdown_end)
             <div x-data="countdown('{{ $settings->countdown_end }}')" class="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full">
                 <span class="text-orbita-gold font-black uppercase tracking-widest text-[10px]">{{ $settings->promo_banner_text ?? 'OFFER:' }}</span>
                 <div class="flex gap-1 font-mono text-white text-[10px]">
@@ -49,15 +48,19 @@
         </div>
     </div>
 
-    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100">
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            
             <a href="/" class="flex items-center">
-                @if($settings && $settings->logo_path)
-                    <img src="{{ asset('storage/'.$settings->logo_path) }}" class="h-10 w-auto" alt="Orbita">
+                @if(isset($settings) && $settings->logo_path)
+                    {{-- BIGGER LOGO: h-14 (Mobile) to h-24 (Desktop) --}}
+                    <img src="{{ asset('storage/' . $settings->logo_path) }}" 
+                         class="h-14 md:h-24 w-auto object-contain transition-transform duration-300 hover:scale-105" 
+                         alt="{{ $settings->shop_name }}">
                 @else
                     <div class="leading-tight group">
-                        <span class="block text-2xl font-black text-orbita-blue tracking-tighter group-hover:text-orbita-gold transition">ORBITA</span>
-                        <span class="block text-[10px] font-bold text-orbita-gold uppercase tracking-[0.3em] group-hover:text-orbita-blue transition">Kenya</span>
+                        <span class="block text-3xl font-black text-orbita-blue tracking-tighter group-hover:text-orbita-gold transition">ORBITA</span>
+                        <span class="block text-xs font-bold text-orbita-gold uppercase tracking-[0.3em] group-hover:text-orbita-blue transition">Kenya</span>
                     </div>
                 @endif
             </a>
