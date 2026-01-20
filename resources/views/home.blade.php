@@ -99,19 +99,41 @@
             </div>
         </div>
     </section>
-    <section class="py-20 bg-white border-b border-gray-50 overflow-hidden">
-        <div class="container mx-auto px-4 text-center mb-12">
-            <h3 class="text-[10px] font-black text-gray-300 uppercase tracking-[0.5em]">Trusted By Industry Leaders</h3>
+    <section class="py-28 relative bg-white overflow-hidden border-b border-gray-100">
+        
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+            <div class="absolute -top-24 -left-24 w-96 h-96 bg-gray-100 rounded-full blur-3xl opacity-60"></div>
+            <div class="absolute top-1/2 right-0 w-[500px] h-[500px] bg-orbita-gold/5 rounded-full blur-[100px] translate-x-1/2"></div>
         </div>
-        <div class="flex animate-marquee gap-24 items-center whitespace-nowrap">
-            @for($i=0; $i<2; $i++)
-                @foreach($clients as $client)
-                    <div class="flex-shrink-0 group flex flex-col items-center justify-center w-64">
-                        <img src="{{ asset('storage/'.$client->logo_path) }}" 
-                             class="h-20 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-500 transform hover:scale-110">
-                    </div>
-                @endforeach
-            @endfor
+
+        <div class="container mx-auto px-4 relative z-10 text-center mb-24">
+            <span class="text-orbita-gold font-bold uppercase tracking-[0.3em] text-sm mb-4 block animate-pulse-slow">
+                Our Ecosystem
+            </span>
+            <h2 class="text-5xl md:text-7xl font-black text-orbita-blue mb-8 tracking-tighter leading-tight">
+                Trusted by <br class="hidden md:block"> Industry Leaders
+            </h2>
+            <p class="text-gray-500 max-w-3xl mx-auto text-xl leading-relaxed font-medium">
+                We are proud to secure and empower the most prestigious hospitality brands across Kenya and East Africa with our smart technology.
+            </p>
+        </div>
+
+        <div class="relative w-full overflow-hidden group">
+            
+            <div class="absolute top-0 left-0 z-10 h-full w-32 md:w-80 bg-gradient-to-r from-white via-white/90 to-transparent pointer-events-none"></div>
+            <div class="absolute top-0 right-0 z-10 h-full w-32 md:w-80 bg-gradient-to-l from-white via-white/90 to-transparent pointer-events-none"></div>
+
+            <div class="flex animate-marquee gap-16 md:gap-32 items-center whitespace-nowrap py-4 hover:[animation-play-state:paused]">
+                @for($i=0; $i<4; $i++) 
+                    @foreach($clients as $client)
+                        <div class="flex-shrink-0 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-105 cursor-pointer px-4">
+                            <img src="{{ asset('storage/'.$client->logo_path) }}" 
+                                 class="h-218 md:h-42 w-auto max-w-[180px] md:max-w-[250px] object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition duration-500"
+                                 alt="Client Logo">
+                        </div>
+                    @endforeach
+                @endfor
+            </div>
         </div>
     </section>
 
