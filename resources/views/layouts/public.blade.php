@@ -87,13 +87,17 @@ s0.parentNode.insertBefore(s1,s0);
                 @endif
             </a>
 
-            <nav class="hidden lg:flex items-center gap-8 font-bold text-xs uppercase tracking-widest text-gray-600">
-                <a href="/" class="text-orbita-blue hover:text-orbita-gold py-2 transition-all border-b-2 border-transparent hover:border-orbita-gold">Home</a>
-                <a href="#about" class="hover:text-orbita-gold py-2 transition-all border-b-2 border-transparent hover:border-orbita-gold">About</a>
-                <a href="#products" class="hover:text-orbita-gold py-2 transition-all border-b-2 border-transparent hover:border-orbita-gold">Products</a>
-                <a href="#work" class="hover:text-orbita-gold py-2 transition-all border-b-2 border-transparent hover:border-orbita-gold">Our Work</a>
-                <a href="#contact" class="hover:text-orbita-gold py-2 transition-all border-b-2 border-transparent hover:border-orbita-gold">Contact</a>
-            </nav>
+           <nav class="hidden lg:flex items-center gap-8 font-bold text-xs uppercase tracking-widest text-gray-600">
+    <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Home</a>
+    
+    <a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Products</a>
+    
+    <a href="{{ route('work') }}" class="{{ request()->routeIs('work') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Our Work</a>
+    
+    <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">About</a>
+    
+    <a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Contact</a>
+</nav>
 
             <div class="flex items-center gap-4">
                 <a href="/admin" class="p-2 text-gray-400 hover:text-orbita-blue transition" title="My Account">

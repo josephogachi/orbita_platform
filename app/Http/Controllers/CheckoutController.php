@@ -6,19 +6,35 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Intasend\IntasendPHP\Checkout;
+use Darryldecode\Cart\Facades\CartFacade as Cart;
 
 class CheckoutController extends Controller
 {
+    public function index()
+    {
+        if (Cart::isEmpty()) {
+            return redirect()->route('products.index');
+        }
+
+        return view('checkout.index', [
+            'cartItems' => Cart::getContent(),
+            'total' => Cart::getTotal()
+        ]);
+    }
+
     public function store(Request $request)
     {
         // 1. Validate customer info
         $request->validate([
-            'phone' => 'required', // Essential for M-Pesa
+            'phone' => 'required',
             'email' => 'required|email',
             'address' => 'required'
         ]);
 
-        // 2. Create the Order (Using your existing schema)
+        $cartItems = Cart::getContent();
+        $grandTotal = Cart::getTotal();
+
+        // 2. Create the Order
         $order = Order::create([
             'order_number' => 'ORB-' . strtoupper(str()->random(8)),
             'user_id' => auth()->id(),
@@ -26,14 +42,22 @@ class CheckoutController extends Controller
             'payment_status' => 'unpaid',
             'currency' => 'KES',
             'shipping_address' => $request->address,
-            'grand_total' => $request->total, // Total from cart
+            'grand_total' => $grandTotal,
             'notes' => $request->notes,
         ]);
 
-        // 3. Save Order Items (Assuming you have cart data in session)
-        // foreach($cartItems as $item) { ... OrderItem::create(...) ... }
+        // 3. Save Order Items from the Cart
+        foreach ($cartItems as $item) {
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $item->id,
+                'quantity' => $item->quantity,
+                'unit_amount' => $item->price,
+                'total_amount' => $item->getPriceSum(),
+            ]);
+        }
 
-        // 4. Send to Payment Gateway (M-Pesa / Card)
+        // 4. Prepare IntaSend Checkout
         $credentials = [
             'publishable_key' => config('services.intasend.key'),
             'token' => config('services.intasend.secret'),
@@ -43,16 +67,23 @@ class CheckoutController extends Controller
         $checkout = new Checkout();
         $checkout->init($credentials);
 
-        $payment = $checkout->create(
-            $amount = $order->grand_total,
-            $currency = "KES",
-            $customer_link = null,
-            $host = url('/'),
-            $redirect_url = route('checkout.success'),
-            $api_ref = $order->order_number, // Link gateway to your Order Number
-            $comment = "Payment for Orbita Order " . $order->order_number
-        );
+        try {
+            $payment = $checkout->create(
+                $amount = $order->grand_total,
+                $currency = "KES",
+                $customer_link = null,
+                $host = url('/'),
+                $redirect_url = route('payment.status'), // Using your existing status route
+                $api_ref = $order->order_number,
+                $comment = "Payment for Orbita Order " . $order->order_number
+            );
 
-        return redirect($payment->url);
+            // 5. Clear the Cart after successful payment initialization
+            Cart::clear();
+
+            return redirect($payment->url);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Payment gateway error: ' . $e->getMessage());
+        }
     }
 }

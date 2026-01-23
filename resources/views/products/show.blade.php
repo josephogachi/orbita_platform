@@ -72,14 +72,7 @@
                 </div>
                 @endif
 
-                <div class="flex flex-col sm:flex-row gap-4 mt-auto">
-                    <button class="flex-1 bg-orbita-blue text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orbita-gold transition shadow-xl">
-                        Add to Cart
-                    </button>
-                    <a href="https://wa.me/254700000000?text=I'm interested in {{ $product->name }}" class="flex-1 border-2 border-gray-100 text-orbita-blue py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:border-orbita-blue transition text-center flex items-center justify-center gap-2">
-                        WhatsApp Inquiry
-                    </a>
-                </div>
+                <livewire:add-to-cart :product="$product" />
             </div>
         </div>
     </div>
