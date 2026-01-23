@@ -128,7 +128,7 @@
                     @foreach($clients as $client)
                         <div class="flex-shrink-0 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-105 cursor-pointer px-4">
                             <img src="{{ asset('storage/'.$client->logo_path) }}" 
-                                 class="h-218 md:h-42 w-auto max-w-[180px] md:max-w-[250px] object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition duration-500"
+                                 class="h-20 md:h-28 w-auto max-w-[200px] md:max-w-[350px] object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition duration-500"
                                  alt="Client Logo">
                         </div>
                     @endforeach
@@ -137,66 +137,134 @@
         </div>
     </section>
 
-    <section class="py-28 relative bg-orbita-light overflow-hidden" x-data="{ tab: 'new' }">
-        <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-white rounded-full blur-[120px] opacity-70 pointer-events-none translate-x-1/2 -translate-y-1/2"></div>
-        <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orbita-gold/10 rounded-full blur-[100px] opacity-70 pointer-events-none -translate-x-1/2 translate-y-1/2"></div>
+    @php
+    $productSections = [
+        [
+            'title' => 'New Arrivals', 
+            'subtitle' => 'JUST IN',
+            'icon' => 'M12 6v6m0 0v6m0-6h6m-6 0H6',
+            'products' => $newArrivals,
+            'color' => 'orbita-blue'
+        ],
+        [
+            'title' => 'Hot Selling', 
+            'subtitle' => 'FLASH SALE',
+            'icon' => 'M13 10V3L4 14h7v7l9-11h-7z',
+            'products' => $hotSelling,
+            'color' => 'red-600'
+        ],
+        [
+            'title' => 'Sponsored Products', 
+            'subtitle' => 'FEATURED',
+            'icon' => 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z',
+            'products' => $sponsoredProducts,
+            'color' => 'orbita-gold'
+        ]
+    ];
+@endphp
 
-        <div class="container mx-auto px-4 relative z-10">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
-                <div>
-                    <span class="text-orbita-gold font-bold uppercase tracking-widest text-xs mb-3 block">Catalog</span>
-                    <h2 class="text-4xl md:text-5xl font-black text-orbita-blue tracking-tight">Curated <br>Excellence</h2>
+@foreach($productSections as $section)
+    @if($section['products']->count() > 0)
+    <section class="py-12 container mx-auto px-4">
+        <div class="bg-orbita-blue rounded-t-[2.5rem] p-5 md:px-10 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-white/10 shadow-lg">
+            <div class="flex items-center gap-4">
+                <div class="bg-orbita-gold p-2 rounded-xl shadow-glow">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $section['icon'] }}" />
+                    </svg>
                 </div>
-                <div class="flex bg-white p-1.5 rounded-full shadow-sm border border-gray-100">
-                    <button @click="tab = 'new'" :class="{ 'bg-orbita-blue text-white shadow-md': tab === 'new', 'text-gray-400 hover:text-orbita-blue': tab !== 'new' }" class="px-8 py-3 rounded-full font-black text-[10px] uppercase tracking-widest transition-all">New Arrivals</button>
-                    <button @click="tab = 'hot'" :class="{ 'bg-orbita-blue text-white shadow-md': tab === 'hot', 'text-gray-400 hover:text-orbita-blue': tab !== 'hot' }" class="px-8 py-3 rounded-full font-black text-[10px] uppercase tracking-widest transition-all">Hot Selling</button>
-                    <button @click="tab = 'sponsored'" :class="{ 'bg-orbita-blue text-white shadow-md': tab === 'sponsored', 'text-gray-400 hover:text-orbita-blue': tab !== 'sponsored' }" class="px-8 py-3 rounded-full font-black text-[10px] uppercase tracking-widest transition-all">Sponsored</button>
+                <div>
+                    <span class="text-orbita-gold text-[10px] font-black tracking-[0.3em] uppercase block leading-none mb-1">{{ $section['subtitle'] }}</span>
+                    <h2 class="text-white font-black uppercase tracking-tighter text-2xl leading-none">{{ $section['title'] }}</h2>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-                @foreach($featuredProducts as $product)
-                    <div x-show="(tab === 'new') || (tab === 'hot' && {{ $product->is_hot ? 'true' : 'false' }}) || (tab === 'sponsored' && {{ $product->is_sponsored ? 'true' : 'false' }})"
-                         x-transition:enter="transition ease-out duration-500"
-                         x-transition:enter-start="opacity-0 transform scale-95"
-                         x-transition:enter-end="opacity-100 transform scale-100"
-                         class="group bg-white rounded-[2.5rem] p-6 shadow-card hover:shadow-2xl transition-all duration-500 border border-white flex flex-col relative overflow-hidden h-full">
-                        
-                        @if($product->discount_percent)
-                        <div class="absolute top-0 right-0 bg-orbita-gold text-white px-6 py-3 rounded-bl-[2rem] font-black text-xs z-20 shadow-sm">
-                            -{{ $product->discount_percent }}%
-                        </div>
-                        @endif
-
-                        <div class="h-64 rounded-[2rem] bg-gray-50 mb-6 relative flex items-center justify-center overflow-hidden">
-                            @if($product->images && count($product->images) > 0)
-                                <img src="{{ asset('storage/'.$product->images[0]) }}" class="max-h-48 w-auto object-contain mix-blend-multiply group-hover:scale-110 transition duration-700">
-                            @else
-                                <div class="flex flex-col items-center justify-center text-gray-300">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest">No Image</span>
-                                </div>
-                            @endif
-                            <div class="absolute inset-0 bg-orbita-blue/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
-                                <button class="bg-white text-orbita-blue px-6 py-3 rounded-full font-bold text-xs uppercase shadow-xl transform translate-y-4 group-hover:translate-y-0 transition duration-300">Quick View</button>
-                            </div>
-                        </div>
-
-                        <div class="px-2 pb-2 flex-1 flex flex-col">
-                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{{ $product->category->name ?? 'Product' }}</div>
-                            <h3 class="text-lg font-black text-orbita-blue uppercase leading-tight mb-2 group-hover:text-orbita-gold transition line-clamp-2">{{ $product->name }}</h3>
-                            <div class="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
-                                <span class="text-2xl font-black text-orbita-blue tracking-tighter">KES {{ number_format($product->price) }}</span>
-                                <button class="w-10 h-10 rounded-full bg-orbita-blue text-white flex items-center justify-center hover:bg-orbita-gold transition shadow-lg transform group-hover:rotate-90">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                </button>
-                            </div>
-                        </div>
+            <div class="flex items-center gap-6">
+                @if($settings->show_countdown && $section['title'] === 'Hot Selling')
+                <div class="flex items-center gap-3 text-white">
+                    <span class="text-[10px] text-orbita-gold font-black uppercase tracking-widest hidden lg:block text-right leading-tight">Ends<br>In:</span>
+                    <div x-data="countdown('{{ $settings->countdown_end }}')" class="flex gap-2 font-mono text-xl">
+                        <div class="bg-white/10 px-2 py-1 rounded flex flex-col items-center"><span x-text="hours">00</span><small class="text-[8px] opacity-50">HR</small></div>
+                        <div class="bg-white/10 px-2 py-1 rounded flex flex-col items-center"><span x-text="minutes">00</span><small class="text-[8px] opacity-50">MIN</small></div>
+                        <div class="bg-white/10 px-2 py-1 rounded flex flex-col items-center"><span x-text="seconds">00</span><small class="text-[8px] opacity-50">SEC</small></div>
                     </div>
-                @endforeach
+                </div>
+                @endif
+                <a href="#" class="bg-white/10 hover:bg-orbita-gold text-white px-5 py-2.5 rounded-full font-bold text-[10px] uppercase tracking-widest transition-all border border-white/20 flex items-center gap-2">
+                    View All <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+                </a>
             </div>
         </div>
-    </section>
 
+        <div class="bg-white rounded-b-[2.5rem] p-8 shadow-2xl border-x border-b border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+            @foreach($section['products'] as $product)
+            <div class="group flex flex-col relative bg-white h-full">
+                
+                @if($product->discount_percent > 0)
+                <div class="absolute top-2 right-2 bg-red-600 text-white font-black text-[10px] px-3 py-1 rounded-full z-10 shadow-lg">
+                    SAVE {{ $product->discount_percent }}%
+                </div>
+                @endif
+
+                <div class="h-56 flex items-center justify-center mb-6 relative overflow-hidden rounded-[2rem] bg-orbita-light border border-transparent group-hover:border-orbita-gold/20 transition-all duration-500 shadow-inner">
+                    @if($product->images && count($product->images) > 0)
+                        <img src="{{ asset('storage/' . $product->images[0]) }}" 
+                             class="max-h-40 w-auto object-contain mix-blend-multiply group-hover:scale-110 transition duration-700 p-4">
+                    @else
+                        <div class="text-gray-300 text-[10px] font-bold uppercase tracking-widest">No Image</div>
+                    @endif
+                    
+                    <div class="absolute inset-0 bg-orbita-blue/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                        <a href="{{ route('product.show', $product->slug) }}" class="bg-white text-orbita-blue px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl transform translate-y-4 group-hover:translate-y-0 transition duration-300 hover:bg-orbita-gold hover:text-white">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex-1 flex flex-col px-1">
+                    <span class="text-[9px] font-bold text-orbita-gold uppercase tracking-[0.2em] mb-1">
+                        {{ $product->category->name ?? 'Orbita' }}
+                    </span>
+                    <h3 class="text-sm font-black text-orbita-blue uppercase leading-tight mb-3 group-hover:text-orbita-gold transition line-clamp-2 h-10">
+                        {{ $product->name }}
+                    </h3>
+                    
+                    <div class="flex flex-col mb-4">
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-xl font-black text-orbita-blue tracking-tighter">
+                                KES {{ number_format($product->price) }}
+                            </span>
+                        </div>
+                        @if($product->old_price && $product->old_price > $product->price)
+                        <span class="text-[10px] text-gray-400 line-through font-bold">
+                            KES {{ number_format($product->old_price) }}
+                        </span>
+                        @endif
+                    </div>
+
+                    <div class="mt-auto">
+                        <div class="flex justify-between text-[9px] font-black uppercase mb-1.5">
+                            <span class="{{ $product->stock_quantity < 10 ? 'text-red-500 animate-pulse' : 'text-gray-400' }}">
+                                {{ $product->stock_quantity }} items left
+                            </span>
+                            <span class="text-gray-300">Stock</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            @php 
+                                // Visual logic: we assume 100 is "full stock" for the bar width
+                                $pWidth = min(($product->stock_quantity / 100) * 100, 100); 
+                            @endphp
+                            <div class="h-full rounded-full transition-all duration-1000 bg-gradient-to-r {{ $product->stock_quantity < 10 ? 'from-red-500 to-red-400' : 'from-orbita-gold to-yellow-400' }}" 
+                                 style="width: {{ $pWidth }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </section>
+    @endif
+@endforeach
     <section class="py-20 container mx-auto px-4">
         <div class="bg-orbita-blue rounded-[3.5rem] p-16 md:p-24 relative overflow-hidden text-center shadow-3xl">
             <div class="absolute top-0 left-0 w-full h-full opacity-10">
@@ -220,6 +288,56 @@
             </div>
             <div class="relative z-10">
                 <a href="#" class="bg-orbita-blue text-white px-12 py-5 rounded-full font-black uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-orbita-blue transition shadow-xl inline-block">Join Network</a>
+            </div>
+        </div>
+    </section>
+    <section class="py-28 relative bg-white overflow-hidden">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-gray-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center mb-20">
+                <span class="text-orbita-gold font-bold uppercase tracking-[0.3em] text-xs mb-4 block">Success Stories</span>
+                <h2 class="text-4xl md:text-6xl font-black text-orbita-blue tracking-tighter">What Our Partners Say</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @forelse($testimonials as $testimonial)
+                    <div class="bg-orbita-light p-10 rounded-[2.5rem] border border-gray-100 relative group hover:bg-white hover:shadow-2xl hover:border-white transition-all duration-500">
+                        <div class="absolute top-8 right-10 text-orbita-gold opacity-10 group-hover:opacity-20 transition-opacity">
+                            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V12C14.017 12.5523 13.5693 13 13.017 13H11.017C10.4647 13 10.017 12.5523 10.017 12V9C10.017 7.34315 11.3601 6 13.017 6H19.017C20.6739 6 22.017 7.34315 22.017 9V15C22.017 17.7614 19.7784 20 17.017 20H14.017V21H14.017ZM2.017 21L2.017 18C2.017 16.8954 2.91243 16 4.017 16H7.017C7.56928 16 8.017 15.5523 8.017 15V9C8.017 8.44772 7.56928 8 7.017 8H3.017C2.46472 8 2.017 8.44772 2.017 9V12C2.017 12.5523 1.56928 13 1.017 13H-0.983C-1.53528 13 -2.017 12.5523 -2.017 12V9C-2.017 7.34315 -0.67385 6 0.983 6H7.017C8.67385 6 10.017 7.34315 10.017 9V15C10.017 17.7614 7.77843 20 5.017 20H2.017V21H2.017Z" /></svg>
+                        </div>
+
+                        <div class="flex gap-1 mb-6">
+                            @for($i = 0; $i < ($testimonial->rating ?? 5); $i++)
+                                <svg class="w-4 h-4 text-orbita-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                            @endfor
+                        </div>
+
+                        <p class="text-gray-600 italic leading-relaxed mb-8 relative z-10">
+                            "{{ $testimonial->content }}"
+                        </p>
+
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-full overflow-hidden bg-gray-200 border-2 border-white shadow-sm">
+                                @if($testimonial->image_path)
+                                    <img src="{{ asset('storage/' . $testimonial->image_path) }}" class="w-full h-full object-cover" alt="{{ $testimonial->client_name }}">
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center bg-orbita-blue text-white font-bold">
+                                        {{ substr($testimonial->client_name, 0, 1) }}
+                                    </div>
+                                @endif
+                            </div>
+                            <div>
+                                <h4 class="font-black text-orbita-blue uppercase text-xs tracking-widest">{{ $testimonial->client_name }}</h4>
+                                <p class="text-[10px] text-orbita-gold font-bold uppercase">{{ $testimonial->role }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="lg:col-span-3 text-center py-10 text-gray-400">
+                        <p class="text-xs uppercase tracking-widest font-bold">No testimonials added yet.</p>
+                    </div>
+                @endforelse
             </div>
         </div>
     </section>

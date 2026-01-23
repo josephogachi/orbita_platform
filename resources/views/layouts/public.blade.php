@@ -13,6 +13,28 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/YOUR_UNIQUE_ID/default';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+
+// Pass User Data to Chat for personalized support
+@auth
+    Tawk_API.onLoad = function(){
+        Tawk_API.setAttributes({
+            'name'  : '{{ auth()->user()->name }}',
+            'email' : '{{ auth()->user()->email }}',
+            'hash'  : '{{ hash_hmac("sha256", auth()->user()->email, "your_tawk_secret") }}'
+        }, function(error){});
+    };
+@endauth
+</script>
 <body class="bg-orbita-light text-gray-900 antialiased overflow-x-hidden selection:bg-orbita-gold selection:text-white flex flex-col min-h-screen">
 
     <div class="bg-orbita-blue text-white text-xs font-semibold relative overflow-hidden border-b border-white/10">

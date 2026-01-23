@@ -20,7 +20,6 @@ class HomeController extends Controller
             ->orderBy('sort_order', 'asc')
             ->get();
 
-        // UPDATED: Fetch ALL active ads (get instead of first)
         $sideAds = SideAd::where('is_active', true)
             ->orderBy('sort_order', 'asc')
             ->get();
@@ -29,11 +28,13 @@ class HomeController extends Controller
             ->orderBy('sort_order', 'asc')
             ->get();
 
-        $featuredProducts = Product::where('is_active', true)
-            ->with('category')
-            ->latest()
-            ->take(20) 
-            ->get();
+        // Base query for active products
+        $baseProductQuery = Product::where('is_active', true)->with('category');
+
+        // Segmented Collections
+        $newArrivals = (clone $baseProductQuery)->latest()->take(10)->get();
+        $hotSelling = (clone $baseProductQuery)->where('is_hot', true)->latest()->take(10)->get();
+        $sponsoredProducts = (clone $baseProductQuery)->where('is_sponsored', true)->latest()->take(10)->get();
 
         $testimonials = Testimonial::where('is_active', true)
             ->latest()
@@ -43,9 +44,11 @@ class HomeController extends Controller
         return view('home', compact(
             'settings', 
             'promotions', 
-            'sideAds', // <--- PLURAL variable
+            'sideAds', 
             'clients', 
-            'featuredProducts', 
+            'newArrivals',
+            'hotSelling',
+            'sponsoredProducts',
             'testimonials'
         ));
     }

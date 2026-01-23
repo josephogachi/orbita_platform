@@ -14,11 +14,6 @@ class ListOrders extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
-            Actions\Action::make('pos')
-                ->label('Open POS Terminal')
-                ->icon('heroicon-o-computer-desktop')
-                ->color('success')
-                ->url(OrderResource::getUrl('pos')), // This links to our new page
         ];
     }
 }

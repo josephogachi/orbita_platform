@@ -67,8 +67,15 @@ class ProductResource extends Resource
                         Forms\Components\TextInput::make('price')
                             ->numeric()
                             ->required()
-                            ->prefix('KES'),
+                            ->prefix('KES')
+                            ->helperText('This is the current selling price.'),
                         
+                        Forms\Components\TextInput::make('old_price')
+                            ->numeric()
+                            ->label('Original (Old) Price')
+                            ->prefix('KES')
+                            ->helperText('If set higher than current price, a discount badge will appear.'),
+
                         Forms\Components\TextInput::make('wholesale_price')
                             ->numeric()
                             ->prefix('KES'),
@@ -79,11 +86,11 @@ class ProductResource extends Resource
                             ->prefix('KES'),
                     ]),
 
-                    // 2. MARKETING (NEW SECTION ADDED)
+                    // 2. MARKETING
                     Forms\Components\Section::make('Marketing & Visibility')->schema([
                         Forms\Components\Grid::make(2)->schema([
                             Forms\Components\Toggle::make('is_hot')
-                                ->label('Hot Selling')
+                                ->label('Flash Sale / Hot')
                                 ->onColor('danger'),
                             
                             Forms\Components\Toggle::make('is_new')
@@ -94,14 +101,11 @@ class ProductResource extends Resource
                             Forms\Components\Toggle::make('is_sponsored')
                                 ->label('Sponsored Item')
                                 ->onColor('warning'),
+                                
+                            Forms\Components\Toggle::make('is_featured')
+                                ->label('Pin to Homepage')
+                                ->default(false),
                         ]),
-
-                        Forms\Components\TextInput::make('discount_percent')
-                            ->label('Discount %')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(100)
-                            ->suffix('%'),
 
                         Forms\Components\TextInput::make('affiliate_link')
                             ->label('External Link')
@@ -138,10 +142,6 @@ class ProductResource extends Resource
                         Forms\Components\Toggle::make('is_active')
                             ->label('Visible on Website')
                             ->default(true),
-                        
-                        Forms\Components\Toggle::make('is_featured')
-                            ->label('Pin to Homepage')
-                            ->default(false),
                     ])
                 ])->columnSpan(1)
             ])->columns(3);
@@ -171,6 +171,15 @@ class ProductResource extends Resource
                     ->money('KES')
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('old_price')
+    ->label('Was')
+    ->money('KES')
+    ->color('gray')
+    // This replaces the strikethrough/lineThrough method with direct CSS classes
+    ->extraAttributes([
+        'class' => 'line-through',
+    ])
+    ->toggleable(),
                 // Marketing Badges
                 Tables\Columns\IconColumn::make('is_hot')
                     ->label('Hot')
@@ -180,7 +189,7 @@ class ProductResource extends Resource
 
                 Tables\Columns\TextColumn::make('discount_percent')
                     ->label('Discount')
-                    ->formatStateUsing(fn ($state) => $state ? "-{$state}%" : '-')
+                    ->getStateUsing(fn (Product $record) => $record->discount_percent > 0 ? "-{$record->discount_percent}%" : null)
                     ->badge()
                     ->color('warning')
                     ->toggleable(),
@@ -197,7 +206,7 @@ class ProductResource extends Resource
                 Tables\Filters\SelectFilter::make('category')
                     ->relationship('category', 'name'),
                 
-                Tables\Filters\TernaryFilter::make('is_hot')->label('Hot Selling'),
+                Tables\Filters\TernaryFilter::make('is_hot')->label('Flash Sale / Hot'),
                 Tables\Filters\TernaryFilter::make('is_new')->label('New Arrivals'),
             ])
             ->actions([
