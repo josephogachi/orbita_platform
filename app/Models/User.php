@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -21,6 +21,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'google_id',
+        'email_verified_at',
+        'role', // Added to support Admin, Seller, and Client roles
     ];
 
     /**
@@ -44,5 +47,25 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Authorize access to Filament panels.
+     * This prevents regular clients from logging into the Admin Dashboard.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Restrict the 'admin' panel to users with the 'admin' role
+        if ($panel->getId() === 'admin') {
+            return $this->role === 'admin';
+        }
+
+        // Future-proofing for your Seller Dashboard
+        if ($panel->getId() === 'seller') {
+            return $this->role === 'seller';
+        }
+
+        // Allow all authenticated users to access the general app/user panel
+        return true;
     }
 }

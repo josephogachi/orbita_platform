@@ -1,40 +1,34 @@
 <?php
 
-use App\Http\Controllers\PaymentCallbackController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PaymentStatusController;
+use App\Models\Product;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
 */
 
 /**
- * 1. User Authentication (Default)
- * Allows authenticated mobile apps or JS frontend to get user data.
+ * 1. User Authentication
  */
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
 /**
- * 2. Payment Gateway Webhook (Production Ready)
- * This is the endpoint the payment gateway (Intasend/Pesapal) calls 
- * to confirm payment success.
+ * 2. IntaSend Payment Webhook
+ * We add BOTH POST and GET because IntaSend uses GET for the initial 
+ * "Challenge" verification and POST for the actual payment data.
  */
-Route::post('/payment/webhook', [PaymentCallbackController::class, 'handleWebhook'])
-    ->name('api.payment.webhook');
+Route::match(['get', 'post'], '/intasend/webhook', [PaymentStatusController::class, 'handleWebhook'])
+    ->name('api.intasend.webhook');
 
 /**
- * 3. Public Product API (Optional)
- * Useful if you ever build a mobile app or need to fetch products via JS.
+ * 3. Public Product API
  */
 Route::get('/products', function() {
-    return \App\Models\Product::where('is_active', true)->get();
+    return Product::all();
 });

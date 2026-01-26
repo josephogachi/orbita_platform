@@ -8,7 +8,7 @@ use App\Http\Controllers\PaymentStatusController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Models\Order;
-
+use App\Http\Controllers\Auth\GoogleController;
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -34,39 +34,39 @@ Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// Using only 'auth' to prevent redirect loops from unverified emails
+Route::middleware(['auth'])->group(function () {
     
     // User Dashboard
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 
-    // Checkout & Payment Processing
+    // Checkout Flow
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     
-    // Payment Callback/Status (Return from IntaSend)
+    // Payment Callback Status
     Route::get('/checkout/status', [PaymentStatusController::class, 'handleReturn'])->name('payment.status');
 
-    // E-commerce Profile & Order History
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
-    Route::get('/profile/invoice/{order}', [ProfileController::class, 'downloadInvoice'])->name('profile.invoice');
+    // Profile & Order History
+    Route::controller(ProfileController::class)->group(function () {
+        Route::get('/profile', 'index')->name('profile.index');
+        Route::get('/profile/settings', 'edit')->name('profile.edit');
+        Route::patch('/profile', 'update')->name('profile.update');
+        Route::delete('/profile', 'destroy')->name('profile.destroy');
+        Route::get('/profile/invoice/{order}', 'downloadInvoice')->name('profile.invoice');
+    });
 
-    // Account Settings (Breeze Defaults)
-    Route::get('/profile/settings', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // POS / Internal Tools
+    // POS / Internal Printing
     Route::get('/print/receipt/{order}', function (Order $order) {
         return view('filament.pages.pos-receipt', ['order' => $order]);
     })->name('print.receipt');
 });
+// Google Authentication Routes
+Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
-/*
-|--------------------------------------------------------------------------
-| Authentication System (Breeze)
-|--------------------------------------------------------------------------
-*/
-
+Route::get('/checkout/status', [PaymentStatusController::class, 'handleReturn'])->name('payment.status');
+Route::post('/intasend/webhook', [PaymentStatusController::class, 'handleWebhook']);
 require __DIR__.'/auth.php';

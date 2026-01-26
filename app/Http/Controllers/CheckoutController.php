@@ -5,8 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
-use Intasend\IntasendPHP\Checkout;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Darryldecode\Cart\Facades\CartFacade as Cart;
+
+// IMPORT BOTH CLASSES FROM INTASEND
+use IntaSend\IntaSendPHP\Checkout;
+use IntaSend\IntaSendPHP\Customer;
 
 class CheckoutController extends Controller
 {
@@ -15,75 +20,84 @@ class CheckoutController extends Controller
         if (Cart::isEmpty()) {
             return redirect()->route('products.index');
         }
-
-        return view('checkout.index', [
-            'cartItems' => Cart::getContent(),
-            'total' => Cart::getTotal()
-        ]);
+        $cartItems = Cart::getContent();
+        $total = Cart::getTotal();
+        return view('checkout.index', compact('cartItems', 'total'));
     }
 
-    public function store(Request $request)
+   public function store(Request $request)
     {
-        // 1. Validate customer info
-        $request->validate([
-            'phone' => 'required',
-            'email' => 'required|email',
-            'address' => 'required'
-        ]);
-
-        $cartItems = Cart::getContent();
-        $grandTotal = Cart::getTotal();
-
-        // 2. Create the Order
-        $order = Order::create([
-            'order_number' => 'ORB-' . strtoupper(str()->random(8)),
-            'user_id' => auth()->id(),
-            'status' => 'new',
-            'payment_status' => 'unpaid',
-            'currency' => 'KES',
-            'shipping_address' => $request->address,
-            'grand_total' => $grandTotal,
-            'notes' => $request->notes,
-        ]);
-
-        // 3. Save Order Items from the Cart
-        foreach ($cartItems as $item) {
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $item->id,
-                'quantity' => $item->quantity,
-                'unit_amount' => $item->price,
-                'total_amount' => $item->getPriceSum(),
-            ]);
-        }
-
-        // 4. Prepare IntaSend Checkout
-        $credentials = [
-            'publishable_key' => config('services.intasend.key'),
-            'token' => config('services.intasend.secret'),
-            'test' => config('services.intasend.test_mode'),
-        ];
-
-        $checkout = new Checkout();
-        $checkout->init($credentials);
-
         try {
+            $request->validate([
+                'phone'   => 'required',
+                'address' => 'required',
+            ]);
+
+            $phone = preg_replace('/[^0-9]/', '', $request->phone);
+            if (str_starts_with($phone, '0')) {
+                $phone = '254' . substr($phone, 1);
+            }
+
+            // Create Order
+            $order = Order::create([
+                'order_number'     => 'ORB-' . strtoupper(\Illuminate\Support\Str::random(8)),
+                'user_id'          => auth()->id(),
+                'status'           => 'new',
+                'payment_status'   => 'unpaid',
+                'shipping_address' => $request->address,
+                'grand_total'      => \Darryldecode\Cart\Facades\CartFacade::getTotal(),
+                'phone'            => $phone,
+            ]);
+
+            foreach (\Darryldecode\Cart\Facades\CartFacade::getContent() as $item) {
+                \App\Models\OrderItem::create([
+                    'order_id'    => $order->id,
+                    'product_id'  => $item->id,
+                    'quantity'    => $item->quantity,
+                    'unit_price'  => $item->price, 
+                    'total_price' => $item->getPriceSum(),
+                ]);
+            }
+
+            // 1. Setup Customer with simplified data
+            $customer = new \IntaSend\IntaSendPHP\Customer();
+            $customer->first_name = auth()->user()->name;
+            $customer->last_name = "User";
+            $customer->email = auth()->user()->email;
+            $customer->phone_number = $phone;
+
+            // 2. Setup Checkout with TRIMMED keys
+            $checkout = new \IntaSend\IntaSendPHP\Checkout();
+            $checkout->init([
+                'publishable_key' => trim(env('INTASEND_PUBLISHABLE_KEY')),
+                'token'           => trim(env('INTASEND_SECRET_KEY')),
+                'test'            => true, 
+            ]);
+
+            // 3. THE "STRICT" CREATE CALL
+            // Sometimes 500 errors are caused by the 'host' being an Ngrok URL. 
+            // We will let IntaSend handle the host automatically by passing null.
             $payment = $checkout->create(
-                $amount = $order->grand_total,
-                $currency = "KES",
-                $customer_link = null,
-                $host = url('/'),
-                $redirect_url = route('payment.status'), // Using your existing status route
-                $api_ref = $order->order_number,
-                $comment = "Payment for Orbita Order " . $order->order_number
+                amount: (float) \Darryldecode\Cart\Facades\CartFacade::getTotal(),
+                currency: "KES",
+                customer: $customer,
+                host: null, // Let the SDK decide the host
+                redirect_url: route('payment.status'),
+                api_ref: $order->order_number,
+                comment: "Order " . $order->order_number,
+                method: null
             );
 
-            // 5. Clear the Cart after successful payment initialization
-            Cart::clear();
-
+            \Darryldecode\Cart\Facades\CartFacade::clear();
             return redirect($payment->url);
+
         } catch (\Exception $e) {
-            return back()->with('error', 'Payment gateway error: ' . $e->getMessage());
+             $fullError = $e instanceof \GuzzleHttp\Exception\RequestException && $e->hasResponse() 
+                         ? $e->getResponse()->getBody()->getContents() 
+                         : $e->getMessage();
+            
+            // We strip the JSON to see the raw text detail
+            return dd("INTASEND REJECTED: " . $fullError);
         }
     }
 }
