@@ -5,11 +5,13 @@ namespace App\Models;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable implements FilamentUser
 {
+    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -23,7 +25,7 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'google_id',
         'email_verified_at',
-        'role', // Added to support Admin, Seller, and Client roles
+        'role', // Supports: 'admin', 'seller', 'customer'
     ];
 
     /**
@@ -50,22 +52,45 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Role Helper Methods
+     * These allow you to use if(auth()->user()->isAdmin()) in your controllers/views.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isSeller(): bool
+    {
+        return $this->role === 'seller';
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->role === 'customer';
+    }
+
+    /**
+     * Relationships
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
      * Authorize access to Filament panels.
-     * This prevents regular clients from logging into the Admin Dashboard.
+     * Ensures only staff can access the backend via the "hidden" link.
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        // Restrict the 'admin' panel to users with the 'admin' role
+        // Check access by Panel ID
         if ($panel->getId() === 'admin') {
-            return $this->role === 'admin';
+            // Only 'admin' and 'seller' roles can enter the Filament backend
+            return in_array($this->role, ['admin', 'seller']);
         }
 
-        // Future-proofing for your Seller Dashboard
-        if ($panel->getId() === 'seller') {
-            return $this->role === 'seller';
-        }
-
-        // Allow all authenticated users to access the general app/user panel
+        // Add other panels here if you create separate ones (e.g., 'app' or 'portal')
         return true;
     }
 }

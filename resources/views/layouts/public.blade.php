@@ -13,6 +13,7 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
+
 <script type="text/javascript">
 var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
 (function(){
@@ -24,19 +25,19 @@ s1.setAttribute('crossorigin','*');
 s0.parentNode.insertBefore(s1,s0);
 })();
 
-// Pass User Data to Chat for personalized support
 @auth
     Tawk_API.onLoad = function(){
         Tawk_API.setAttributes({
             'name'  : '{{ auth()->user()->name }}',
-            'email' : '{{ auth()->user()->email }}',
-            'hash'  : '{{ hash_hmac("sha256", auth()->user()->email, "your_tawk_secret") }}'
+            'email' : '{{ auth()->user()->email }}'
         }, function(error){});
     };
 @endauth
 </script>
+
 <body class="bg-orbita-light text-gray-900 antialiased overflow-x-hidden selection:bg-orbita-gold selection:text-white flex flex-col min-h-screen">
 
+    {{-- Top Bar --}}
     <div class="bg-orbita-blue text-white text-xs font-semibold relative overflow-hidden border-b border-white/10">
         <div class="container mx-auto px-4 py-2 flex flex-col md:flex-row justify-between items-center gap-2 relative z-10">
             <div class="flex items-center gap-4 text-white/80">
@@ -60,7 +61,6 @@ s0.parentNode.insertBefore(s1,s0);
             @endif
 
             <div class="flex items-center gap-4">
-                <a href="/admin" class="hover:text-orbita-gold transition">Staff Login</a>
                 <div class="flex gap-2 text-white/80">
                     <button class="hover:text-orbita-gold">EN</button>
                     <span class="opacity-30">|</span>
@@ -70,12 +70,12 @@ s0.parentNode.insertBefore(s1,s0);
         </div>
     </div>
 
+    {{-- Header --}}
     <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
             
             <a href="/" class="flex items-center">
                 @if(isset($settings) && $settings->logo_path)
-                    {{-- BIGGER LOGO: h-14 (Mobile) to h-24 (Desktop) --}}
                     <img src="{{ asset('storage/' . $settings->logo_path) }}" 
                          class="h-14 md:h-24 w-auto object-contain transition-transform duration-300 hover:scale-105" 
                          alt="{{ $settings->shop_name }}">
@@ -87,26 +87,39 @@ s0.parentNode.insertBefore(s1,s0);
                 @endif
             </a>
 
-           <nav class="hidden lg:flex items-center gap-8 font-bold text-xs uppercase tracking-widest text-gray-600">
-    <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Home</a>
-    
-    <a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Products</a>
-    
-    <a href="{{ route('work') }}" class="{{ request()->routeIs('work') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Our Work</a>
-    
-    <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">About</a>
-    
-    <a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Contact</a>
-</nav>
+            <nav class="hidden lg:flex items-center gap-8 font-bold text-xs uppercase tracking-widest text-gray-600">
+                <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Home</a>
+                <a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Products</a>
+                <a href="{{ route('work') }}" class="{{ request()->routeIs('work') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Our Work</a>
+                <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">About</a>
+                <a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Contact</a>
+            </nav>
 
             <div class="flex items-center gap-4">
-                <a href="/admin" class="p-2 text-gray-400 hover:text-orbita-blue transition" title="My Account">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                </a>
-                <button class="p-2 text-gray-400 hover:text-orbita-blue transition relative">
+                {{-- Account Icon: Dynamic Logic --}}
+                @auth
+                    <a href="{{ url('/dashboard') }}" class="p-2 text-gray-400 hover:text-orbita-blue transition relative" title="My Dashboard">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        @if(auth()->user()->orders()->count() > 0)
+                            <span class="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
+                        @endif
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="p-2 text-gray-400 hover:text-orbita-blue transition" title="Login">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                    </a>
+                @endauth
+
+                {{-- Cart Icon: Count Logic --}}
+                <a href="{{ route('cart.index') }}" class="p-2 text-gray-400 hover:text-orbita-blue transition relative" title="View Cart">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                    <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-orbita-gold rounded-full border-2 border-white"></span>
-                </button>
+                    @if(!Cart::isEmpty())
+                        <span class="absolute top-0 right-0 bg-orbita-gold text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
+                            {{ Cart::getContent()->count() }}
+                        </span>
+                    @endif
+                </a>
+
                 <a href="#" class="hidden md:inline-flex bg-orbita-blue text-white px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-orbita-gold hover:shadow-lg transition transform hover:-translate-y-0.5">
                     Catalog
                 </a>
@@ -118,23 +131,18 @@ s0.parentNode.insertBefore(s1,s0);
         @yield('content')
     </main>
 
+    {{-- Footer --}}
     <footer class="bg-orbita-dark text-white pt-24 pb-10 relative overflow-hidden mt-auto border-t border-orbita-blue">
         <div class="absolute top-0 left-0 w-96 h-96 bg-orbita-gold/5 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
         <div class="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
 
         <div class="container mx-auto px-4 relative z-10">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20 border-b border-white/5 pb-16">
-                
                 <div>
                     <h2 class="text-3xl font-black uppercase tracking-tighter mb-6">Orbita<span class="text-orbita-gold">.</span></h2>
                     <p class="text-gray-400 text-sm leading-relaxed mb-8">
                         The leading provider of smart hospitality technology in East Africa. Securing hotels with luxury hardware and intelligent software.
                     </p>
-                    <div class="flex gap-4">
-                        <a href="#" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-orbita-gold hover:text-white transition duration-300 text-gray-400">FB</a>
-                        <a href="#" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-orbita-gold hover:text-white transition duration-300 text-gray-400">IG</a>
-                        <a href="#" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-orbita-gold hover:text-white transition duration-300 text-gray-400">LN</a>
-                    </div>
                 </div>
 
                 <div>
@@ -142,8 +150,6 @@ s0.parentNode.insertBefore(s1,s0);
                     <ul class="space-y-4 text-sm font-medium text-gray-400">
                         <li><a href="#" class="hover:text-white hover:pl-2 transition-all inline-block">About Company</a></li>
                         <li><a href="#" class="hover:text-white hover:pl-2 transition-all inline-block">Our Projects</a></li>
-                        <li><a href="#" class="hover:text-white hover:pl-2 transition-all inline-block">Become a Partner</a></li>
-                        <li><a href="#" class="hover:text-white hover:pl-2 transition-all inline-block">Contact Sales</a></li>
                     </ul>
                 </div>
 
@@ -151,30 +157,32 @@ s0.parentNode.insertBefore(s1,s0);
                     <h4 class="text-orbita-gold font-bold uppercase text-xs tracking-[0.2em] mb-8">Support Center</h4>
                     <ul class="space-y-4 text-sm font-medium text-gray-400">
                         <li><a href="#" class="hover:text-white hover:pl-2 transition-all inline-block">Installation Guide</a></li>
-                        <li><a href="#" class="hover:text-white hover:pl-2 transition-all inline-block">Software Downloads</a></li>
                         <li><a href="#" class="hover:text-white hover:pl-2 transition-all inline-block">Warranty Policy</a></li>
-                        <li><a href="#" class="hover:text-white hover:pl-2 transition-all inline-block">Request Maintenance</a></li>
                     </ul>
                 </div>
 
                 <div>
                     <h4 class="text-orbita-gold font-bold uppercase text-xs tracking-[0.2em] mb-8">Stay Connected</h4>
-                    <p class="text-gray-400 text-xs mb-6">Subscribe to get exclusive B2B offers and industry news.</p>
                     <form class="relative">
                         <input type="email" placeholder="Email Address" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-orbita-gold outline-none text-white">
-                        <button class="absolute right-1 top-1 bottom-1 bg-orbita-gold text-white px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-white hover:text-orbita-blue transition">
-                            Join
-                        </button>
+                        <button class="absolute right-1 top-1 bottom-1 bg-orbita-gold text-white px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-white hover:text-orbita-blue transition">Join</button>
                     </form>
                 </div>
             </div>
 
             <div class="flex flex-col md:flex-row justify-between items-center text-[10px] text-gray-500 font-bold uppercase tracking-widest">
                 <p>&copy; {{ date('Y') }} Orbita Kenya. All rights reserved.</p>
+                
+                {{-- HIDDEN STAFF ACCESS --}}
+                <div class="my-4 md:my-0">
+                    <a href="{{ route('filament.admin.auth.login') }}" class="text-gray-600/30 hover:text-gray-500 transition-colors cursor-default hover:cursor-pointer">
+                        System Access
+                    </a>
+                </div>
+
                 <div class="flex gap-8 mt-4 md:mt-0">
                     <a href="#" class="hover:text-white transition">Privacy Policy</a>
                     <a href="#" class="hover:text-white transition">Terms of Service</a>
-                    <a href="#" class="hover:text-white transition">Sitemap</a>
                 </div>
             </div>
         </div>
@@ -184,17 +192,15 @@ s0.parentNode.insertBefore(s1,s0);
         function countdown(expiry) {
             return {
                 expiry: new Date(expiry).getTime(),
-                days: '00', hours: '00', minutes: '00', seconds: '00',
-                interval: null,
+                days: '00', hours: '00', minutes: '00',
                 init() {
-                    this.interval = setInterval(() => {
+                    setInterval(() => {
                         const now = new Date().getTime();
                         const distance = this.expiry - now;
-                        if (distance < 0) { clearInterval(this.interval); return; }
+                        if (distance < 0) return;
                         this.days = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
                         this.hours = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
                         this.minutes = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
-                        this.seconds = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
                     }, 1000);
                 }
             }

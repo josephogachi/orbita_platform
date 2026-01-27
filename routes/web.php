@@ -9,6 +9,9 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Models\Order;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Client\DashboardController;
+
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -69,4 +72,9 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
 Route::get('/checkout/status', [PaymentStatusController::class, 'handleReturn'])->name('payment.status');
 Route::post('/intasend/webhook', [PaymentStatusController::class, 'handleWebhook']);
+
+// Group this under auth so only logged-in users can see it
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+});
 require __DIR__.'/auth.php';

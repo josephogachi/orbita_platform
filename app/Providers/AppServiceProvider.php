@@ -5,35 +5,28 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\URL;      // Added for Ngrok support
+use Illuminate\Support\Facades\URL;
 use App\Models\ShopSetting;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
-{
-    if (str_contains(config('app.url'), 'ngrok-free.dev')) {
-        \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
-        \Illuminate\Support\Facades\URL::forceScheme('https');
-        
-        // This line is the magic for mobile styling:
-        $this->app['request']->server->set('HTTPS', true);
-    }
+    {
+        // Force HTTPS if the application is not running on localhost
+        // This is the "Magic Fix" for mobile styling on Ngrok
+        if (config('app.env') !== 'local' || str_contains(request()->getHost(), 'ngrok-free.dev')) {
+            URL::forceScheme('https');
+        }
 
-    if (\Illuminate\Support\Facades\Schema::hasTable('shop_settings')) {
-        $settings = \App\Models\ShopSetting::first();
-        \Illuminate\Support\Facades\View::share('settings', $settings);
+        // Shared settings logic
+        if (Schema::hasTable('shop_settings')) {
+            $settings = ShopSetting::first();
+            View::share('settings', $settings);
+        }
     }
-}
 }
