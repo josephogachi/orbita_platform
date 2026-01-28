@@ -14,7 +14,6 @@ class ClientResource extends Resource
 {
     protected static ?string $model = Client::class;
     
-    // Icon for the sidebar
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationGroup = 'Website Content';
     protected static ?int $navigationSort = 2;
@@ -23,35 +22,46 @@ class ClientResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Client Details')->schema([
-                    Forms\Components\TextInput::make('name')
-                        ->label('Client / Company Name')
-                        ->required()
-                        ->maxLength(255),
+                Forms\Components\Section::make('Client / Partner Details')
+                    ->description('These logos appear in the "Trusted By" marquee on the homepage.')
+                    ->schema([
+                        Forms\Components\Grid::make(2)->schema([
+                            Forms\Components\TextInput::make('name')
+                                ->label('Company Name')
+                                ->placeholder('e.g., Sarova Hotels')
+                                ->required()
+                                ->maxLength(255),
 
-                    Forms\Components\TextInput::make('website')
-                        ->label('Website URL (Optional)')
-                        ->url()
-                        ->prefix('https://'),
+                            Forms\Components\TextInput::make('website')
+                                ->label('Client Website (Optional)')
+                                ->url()
+                                ->prefix('https://')
+                                ->placeholder('www.client-site.com'),
+                        ]),
 
-                    Forms\Components\FileUpload::make('logo_path')
-                        ->label('Logo Image')
-                        ->image()
-                        ->directory('clients')
-                        ->required()
-                        ->columnSpanFull(),
+                        Forms\Components\FileUpload::make('logo_path')
+                            ->label('Client Logo')
+                            ->image()
+                            ->imageEditor() // Crucial to crop logos to a standard aspect ratio
+                            ->directory('clients')
+                            ->required()
+                            ->helperText('Use a transparent PNG or high-quality logo for the marquee.')
+                            ->columnSpanFull(),
 
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\Toggle::make('is_visible')
-                            ->label('Visible on Home Page')
-                            ->default(true),
+                        Forms\Components\Grid::make(2)->schema([
+                            Forms\Components\Toggle::make('is_visible')
+                                ->label('Visible on Home Page')
+                                ->helperText('Toggle to hide/show this client without deleting.')
+                                ->default(true)
+                                ->onColor('success'),
 
-                        Forms\Components\TextInput::make('sort_order')
-                            ->numeric()
-                            ->default(0)
-                            ->label('Sort Order'),
-                    ]),
-                ])
+                            Forms\Components\TextInput::make('sort_order')
+                                ->numeric()
+                                ->default(0)
+                                ->label('Priority Order')
+                                ->helperText('Lower numbers appear first.'),
+                        ]),
+                    ])
             ]);
     }
 
@@ -61,24 +71,33 @@ class ClientResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('logo_path')
                     ->label('Logo')
-                    ->height(40),
+                    ->height(50)
+                    ->backgroundStyle('gray') // Helps see transparent white logos
+                    ->square(),
                 
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Client Name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold'),
 
                 Tables\Columns\TextColumn::make('website')
-                    ->limit(30)
+                    ->label('URL')
+                    ->icon('heroicon-m-link')
+                    ->color('primary')
+                    ->url(fn ($state) => $state, true)
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\ToggleColumn::make('is_visible')
-                    ->label('Visible'),
+                    ->label('Live Status'),
 
                 Tables\Columns\TextColumn::make('sort_order')
-                    ->sortable(),
+                    ->label('Position')
+                    ->sortable()
+                    ->badge(),
             ])
             ->defaultSort('sort_order', 'asc')
-            ->reorderable('sort_order') // Enables Drag & Drop reordering
+            ->reorderable('sort_order') // Allows dragging rows up and down
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),

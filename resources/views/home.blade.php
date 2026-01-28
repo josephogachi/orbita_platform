@@ -2,12 +2,23 @@
 
 @section('content')
 
-    <section class="pt-6 pb-12 px-4 container mx-auto">
+    {{-- 1. HERO SECTION --}}
+    {{-- 1. HERO SECTION --}}
+    <section class="pt-4 lg:pt-6 pb-8 lg:pb-12 px-4 container mx-auto">
+        {{-- 
+           We remove the fixed height on mobile and use 'h-auto'.
+           On desktop, we keep the lg:h-[680px].
+        --}}
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-auto lg:h-[680px]">
             
+            {{-- 
+               MOBILE FIX: 
+               1. 'aspect-[16/9]' forces it to be a landscape rectangle on phones.
+               2. 'h-auto' allows it to define its own height based on that aspect ratio.
+            --}}
             <div x-data="{ active: 0, total: {{ $promotions->count() }} }" 
                  x-init="setInterval(() => { active = (active + 1) % total }, 6000)"
-                 class="lg:col-span-3 relative rounded-[2.5rem] overflow-hidden shadow-2xl group border-4 border-white bg-gray-900">
+                 class="lg:col-span-3 relative rounded-[1.5rem] lg:rounded-[2.5rem] overflow-hidden shadow-2xl group border-2 lg:border-4 border-white bg-gray-900 aspect-[16/9] md:aspect-video lg:aspect-auto lg:h-full w-full">
                 
                 @forelse($promotions as $index => $promo)
                     <div x-show="active === {{ $index }}"
@@ -15,92 +26,76 @@
                          x-transition:enter-start="opacity-0 scale-105"
                          x-transition:enter-end="opacity-100 scale-100"
                          class="absolute inset-0 w-full h-full">
+                        
+                        {{-- Content --}}
                         @if($promo->type === 'video')
                             <video class="w-full h-full object-cover" autoplay muted loop playsinline>
                                 <source src="{{ asset('storage/'.$promo->file_path) }}" type="video/mp4">
                             </video>
                         @else
-                            <img src="{{ asset('storage/'.$promo->file_path) }}" class="w-full h-full object-cover">
+                            @php $img = $promo->file_path ?? $promo->image; @endphp
+                            <img src="{{ asset('storage/'.$img) }}" class="w-full h-full object-cover object-center">
                         @endif
+
                         <div class="absolute inset-0 bg-gradient-to-r from-orbita-blue/90 via-orbita-blue/30 to-transparent"></div>
-                        <div class="absolute inset-0 flex items-center px-12 md:px-20">
-                            <div class="max-w-xl text-white space-y-6">
-                                <span class="bg-orbita-gold text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-glow inline-block">Official Partner</span>
-                                <h1 class="text-5xl md:text-7xl font-black leading-none uppercase drop-shadow-lg">{{ $promo->title }}</h1>
-                                <a href="{{ $promo->link_url ?? '#' }}" class="inline-block bg-white text-orbita-blue px-10 py-4 rounded-full font-bold text-xs uppercase tracking-widest hover:bg-orbita-gold hover:text-white transition shadow-xl">Explore Now</a>
+                        
+                        {{-- Text Container --}}
+                        <div class="absolute inset-0 flex items-center px-6 md:px-20">
+                            <div class="max-w-xl text-white space-y-2 md:space-y-6">
+                                <span class="bg-orbita-gold text-white px-2 py-0.5 md:px-4 md:py-1.5 rounded-full text-[7px] md:text-[10px] font-black uppercase tracking-[0.2em] shadow-glow inline-block">
+                                    Official Partner
+                                </span>
+                                
+                                <h1 class="text-xl md:text-7xl font-black leading-tight uppercase drop-shadow-lg shadow-black">
+                                    {{ $promo->title }}
+                                </h1>
+
+                                <a href="{{ $promo->link_url ?? $promo->link ?? '#' }}" class="inline-block bg-white text-orbita-blue px-4 py-1.5 md:px-10 md:py-4 rounded-full font-bold text-[9px] md:text-xs uppercase tracking-widest hover:bg-orbita-gold hover:text-white transition shadow-xl">
+                                    {{ $promo->button_text ?? 'Explore Now' }}
+                                </a>
                             </div>
                         </div>
                     </div>
                 @empty
                     <div class="absolute inset-0 flex items-center justify-center text-white bg-orbita-blue">
-                        <p class="font-bold">Upload Banners in Admin Panel</p>
+                        <p class="font-bold text-xs">Upload Banners in Admin</p>
                     </div>
                 @endforelse
             </div>
 
+            {{-- Side Ads - Stays hidden on small mobile screens to keep the landscape look clean --}}
             <div class="hidden lg:block h-full">
                 @if($sideAds->count() > 0)
                     <div x-data="{ current: 0, count: {{ $sideAds->count() }} }" 
                          x-init="setInterval(() => { current = (current + 1) % count }, 5000)"
                          class="relative rounded-[2.5rem] overflow-hidden shadow-card border border-white bg-white h-full flex flex-col group">
                         
-                        <div class="absolute top-4 right-4 z-20 bg-gray-100 hover:bg-orbita-gold hover:text-white p-2 rounded-full transition cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </div>
-
                         @foreach($sideAds as $index => $ad)
                             <div x-show="current === {{ $index }}"
                                  x-transition:enter="transition ease-out duration-700"
-                                 x-transition:enter-start="opacity-0 translate-y-4"
-                                 x-transition:enter-end="opacity-100 translate-y-0"
                                  class="absolute inset-0 w-full h-full flex flex-col p-8 items-center text-center bg-orbita-light justify-center">
                                 
-                                @if($ad->badge_text)
-                                    <span class="text-orbita-blue font-black uppercase tracking-[0.2em] text-[10px] mb-6 bg-orbita-gold/10 px-4 py-1 rounded-full animate-pulse-slow">
-                                        {{ $ad->badge_text }}
-                                    </span>
-                                @endif
-
                                 <div class="flex-1 flex items-center justify-center w-full">
-                                    <img src="{{ asset('storage/'.$ad->image_path) }}" 
-                                         class="max-w-[180px] max-h-[220px] object-contain drop-shadow-2xl transform hover:scale-110 transition duration-700"
-                                         alt="{{ $ad->title }}">
+                                    @php $adImg = $ad->image_path ?? $ad->image; @endphp
+                                    <img src="{{ asset('storage/'.$adImg) }}" class="max-w-[180px] max-h-[220px] object-contain drop-shadow-2xl">
                                 </div>
 
                                 <div class="mt-6 w-full">
-                                    <h3 class="text-xl font-black text-orbita-blue uppercase leading-none mb-2">{{ $ad->title }}</h3>
-                                    @if($ad->subtitle)
-                                        <p class="text-xs text-gray-500 font-bold mb-4">{{ $ad->subtitle }}</p>
-                                    @endif
-                                    <a href="{{ $ad->link_url ?? '#' }}" class="block w-full py-3 bg-orbita-blue text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orbita-gold transition shadow-lg">
-                                        {{ $ad->button_text }}
+                                    <h3 class="text-xl font-black text-orbita-blue uppercase mb-2">{{ $ad->title }}</h3>
+                                    <a href="{{ $ad->link_url ?? $ad->link ?? '#' }}" class="block w-full py-3 bg-orbita-blue text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orbita-gold transition shadow-lg">
+                                        {{ $ad->button_text ?? 'View Deal' }}
                                     </a>
                                 </div>
                             </div>
                         @endforeach
-                        
-                        @if($sideAds->count() > 1)
-                        <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
-                            @foreach($sideAds as $index => $ad)
-                                <button @click="current = {{ $index }}" 
-                                        :class="{'bg-orbita-blue w-4': current === {{ $index }}, 'bg-gray-300 w-2': current !== {{ $index }}}" 
-                                        class="h-2 rounded-full transition-all duration-300"></button>
-                            @endforeach
-                        </div>
-                        @endif
-                    </div>
-                @else
-                    <div class="h-full rounded-[2.5rem] border-2 border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center text-gray-400 p-8 text-center">
-                        <svg class="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        <span class="text-[10px] font-bold uppercase tracking-widest">Ad Space Available</span>
-                        <span class="text-[9px] mt-1">Add 'SideAds' in Admin</span>
                     </div>
                 @endif
             </div>
         </div>
     </section>
+
+    {{-- 2. CLIENTS MARQUEE --}}
     <section class="py-28 relative bg-white overflow-hidden border-b border-gray-100">
-        
         <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
             <div class="absolute -top-24 -left-24 w-96 h-96 bg-gray-100 rounded-full blur-3xl opacity-60"></div>
             <div class="absolute top-1/2 right-0 w-[500px] h-[500px] bg-orbita-gold/5 rounded-full blur-[100px] translate-x-1/2"></div>
@@ -119,7 +114,6 @@
         </div>
 
         <div class="relative w-full overflow-hidden group">
-            
             <div class="absolute top-0 left-0 z-10 h-full w-32 md:w-80 bg-gradient-to-r from-white via-white/90 to-transparent pointer-events-none"></div>
             <div class="absolute top-0 right-0 z-10 h-full w-32 md:w-80 bg-gradient-to-l from-white via-white/90 to-transparent pointer-events-none"></div>
 
@@ -137,7 +131,8 @@
         </div>
     </section>
 
-    @php
+    {{-- 3. PRODUCT SECTIONS --}}
+@php
     $productSections = [
         [
             'title' => 'New Arrivals', 
@@ -165,7 +160,11 @@
 
 @foreach($productSections as $section)
     @if($section['products']->count() > 0)
-    <section class="py-12 container mx-auto px-4">
+    <section class="py-12 container mx-auto px-4" x-data="{ 
+        prev() { this.$refs.slider.scrollBy({ left: -400, behavior: 'smooth' }) },
+        next() { this.$refs.slider.scrollBy({ left: 400, behavior: 'smooth' }) }
+    }">
+        {{-- Section Header --}}
         <div class="bg-orbita-blue rounded-t-[2.5rem] p-5 md:px-10 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-white/10 shadow-lg">
             <div class="flex items-center gap-4">
                 <div class="bg-orbita-gold p-2 rounded-xl shadow-glow">
@@ -190,107 +189,216 @@
                     </div>
                 </div>
                 @endif
-                <a href="#" class="bg-white/10 hover:bg-orbita-gold text-white px-5 py-2.5 rounded-full font-bold text-[10px] uppercase tracking-widest transition-all border border-white/20 flex items-center gap-2">
-                    View All <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+                
+                {{-- Navigation Arrows --}}
+                <div class="hidden md:flex items-center gap-2">
+                    <button @click="prev()" class="bg-white/10 hover:bg-orbita-gold text-white p-2 rounded-full transition border border-white/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <button @click="next()" class="bg-white/10 hover:bg-orbita-gold text-white p-2 rounded-full transition border border-white/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+
+                <a href="{{ route('products.index') }}" class="bg-white/10 hover:bg-orbita-gold text-white px-5 py-2.5 rounded-full font-bold text-[10px] uppercase tracking-widest transition-all border border-white/20 flex items-center gap-2">
+                    View All
                 </a>
             </div>
         </div>
 
-        <div class="bg-white rounded-b-[2.5rem] p-8 shadow-2xl border-x border-b border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
-            @foreach($section['products'] as $product)
-            <div class="group flex flex-col relative bg-white h-full">
-                
-                @if($product->discount_percent > 0)
-                <div class="absolute top-2 right-2 bg-red-600 text-white font-black text-[10px] px-3 py-1 rounded-full z-10 shadow-lg">
-                    SAVE {{ $product->discount_percent }}%
-                </div>
-                @endif
-
-                <div class="h-56 flex items-center justify-center mb-6 relative overflow-hidden rounded-[2rem] bg-orbita-light border border-transparent group-hover:border-orbita-gold/20 transition-all duration-500 shadow-inner">
-                    @if($product->images && count($product->images) > 0)
-                        <img src="{{ asset('storage/' . $product->images[0]) }}" 
-                             class="max-h-40 w-auto object-contain mix-blend-multiply group-hover:scale-110 transition duration-700 p-4">
-                    @else
-                        <div class="text-gray-300 text-[10px] font-bold uppercase tracking-widest">No Image</div>
+        {{-- Slider Container --}}
+        <div class="bg-white rounded-b-[2.5rem] p-8 shadow-2xl border-x border-b border-gray-100 relative">
+            <div x-ref="slider" class="flex overflow-x-auto gap-8 no-scrollbar snap-x snap-mandatory scroll-smooth pb-4">
+                @foreach($section['products'] as $product)
+                <div class="snap-start flex-shrink-0 w-[280px] md:w-[240px] group flex flex-col relative bg-white h-full">
+                    
+                    @if($product->discount_percent > 0)
+                    <div class="absolute top-2 right-2 bg-red-600 text-white font-black text-[10px] px-3 py-1 rounded-full z-10 shadow-lg">
+                        SAVE {{ $product->discount_percent }}%
+                    </div>
                     @endif
-                    
-                    <div class="absolute inset-0 bg-orbita-blue/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                        <a href="{{ route('product.show', $product->slug) }}" class="bg-white text-orbita-blue px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl transform translate-y-4 group-hover:translate-y-0 transition duration-300 hover:bg-orbita-gold hover:text-white">
-                            View Details
-                        </a>
-                    </div>
-                </div>
 
-                <div class="flex-1 flex flex-col px-1">
-                    <span class="text-[9px] font-bold text-orbita-gold uppercase tracking-[0.2em] mb-1">
-                        {{ $product->category->name ?? 'Orbita' }}
-                    </span>
-                    <h3 class="text-sm font-black text-orbita-blue uppercase leading-tight mb-3 group-hover:text-orbita-gold transition line-clamp-2 h-10">
-                        {{ $product->name }}
-                    </h3>
-                    
-                    <div class="flex flex-col mb-4">
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-xl font-black text-orbita-blue tracking-tighter">
-                                KES {{ number_format($product->price) }}
-                            </span>
-                        </div>
-                        @if($product->old_price && $product->old_price > $product->price)
-                        <span class="text-[10px] text-gray-400 line-through font-bold">
-                            KES {{ number_format($product->old_price) }}
-                        </span>
+                    <div class="h-56 flex items-center justify-center mb-6 relative overflow-hidden rounded-[2rem] bg-orbita-light border border-transparent group-hover:border-orbita-gold/20 transition-all duration-500 shadow-inner">
+                        @if($product->images && count($product->images) > 0)
+                            <img src="{{ asset('storage/' . $product->images[0]) }}" 
+                                 class="max-h-40 w-auto object-contain mix-blend-multiply group-hover:scale-110 transition duration-700 p-4">
+                        @else
+                            <div class="text-gray-300 text-[10px] font-bold uppercase tracking-widest">No Image</div>
                         @endif
+                        
+                        <div class="absolute inset-0 bg-orbita-blue/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                            <a href="{{ route('product.show', $product->slug) }}" class="bg-white text-orbita-blue px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl transform translate-y-4 group-hover:translate-y-0 transition duration-300 hover:bg-orbita-gold hover:text-white">
+                                View Details
+                            </a>
+                        </div>
                     </div>
 
-                    <div class="mt-auto">
-                        <div class="flex justify-between text-[9px] font-black uppercase mb-1.5">
-                            <span class="{{ $product->stock_quantity < 10 ? 'text-red-500 animate-pulse' : 'text-gray-400' }}">
-                                {{ $product->stock_quantity }} items left
+                    <div class="flex-1 flex flex-col px-1">
+                        <span class="text-[9px] font-bold text-orbita-gold uppercase tracking-[0.2em] mb-1">
+                            {{ $product->category->name ?? 'Orbita' }}
+                        </span>
+                        <h3 class="text-sm font-black text-orbita-blue uppercase leading-tight mb-3 group-hover:text-orbita-gold transition line-clamp-2 h-10">
+                            {{ $product->name }}
+                        </h3>
+                        
+                        <div class="flex flex-col mb-4">
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-xl font-black text-orbita-blue tracking-tighter">
+                                    KES {{ number_format($product->price) }}
+                                </span>
+                            </div>
+                            @if($product->old_price && $product->old_price > $product->price)
+                            <span class="text-[10px] text-gray-400 line-through font-bold">
+                                KES {{ number_format($product->old_price) }}
                             </span>
-                            <span class="text-gray-300">Stock</span>
+                            @endif
                         </div>
-                        <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            @php 
-                                // Visual logic: we assume 100 is "full stock" for the bar width
-                                $pWidth = min(($product->stock_quantity / 100) * 100, 100); 
-                            @endphp
-                            <div class="h-full rounded-full transition-all duration-1000 bg-gradient-to-r {{ $product->stock_quantity < 10 ? 'from-red-500 to-red-400' : 'from-orbita-gold to-yellow-400' }}" 
-                                 style="width: {{ $pWidth }}%"></div>
+
+                        <div class="mt-auto">
+                            <div class="flex justify-between text-[9px] font-black uppercase mb-1.5">
+                                <span class="{{ $product->stock_quantity < 10 ? 'text-red-500 animate-pulse' : 'text-gray-400' }}">
+                                    {{ $product->stock_quantity }} items left
+                                </span>
+                                <span class="text-gray-300">Stock</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                @php 
+                                    $pWidth = min(($product->stock_quantity / 100) * 100, 100); 
+                                @endphp
+                                <div class="h-full rounded-full transition-all duration-1000 bg-gradient-to-r {{ $product->stock_quantity < 10 ? 'from-red-500 to-red-400' : 'from-orbita-gold to-yellow-400' }}" 
+                                     style="width: {{ $pWidth }}%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                @endforeach
             </div>
-            @endforeach
         </div>
     </section>
     @endif
 @endforeach
-    <section class="py-20 container mx-auto px-4">
-        <div class="bg-orbita-blue rounded-[3.5rem] p-16 md:p-24 relative overflow-hidden text-center shadow-3xl">
-            <div class="absolute top-0 left-0 w-full h-full opacity-10">
-                <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full"><path d="M0 100 C 20 0 50 0 100 100 Z" fill="white" /></svg>
-            </div>
-            <div class="relative z-10 max-w-3xl mx-auto">
-                <h2 class="text-white text-4xl md:text-6xl font-black mb-10 leading-tight uppercase italic tracking-tighter">Have a Project? <br>Let's <span class="text-transparent bg-clip-text bg-gradient-to-r from-orbita-gold to-yellow-200">Collaborate.</span></h2>
-                <div class="flex flex-wrap justify-center gap-6">
-                    <a href="#" class="bg-white text-orbita-blue px-10 py-5 rounded-full font-black uppercase tracking-widest text-xs hover:bg-orbita-gold hover:text-white transition shadow-xl transform hover:scale-105">Download App</a>
-                    <a href="#" class="bg-transparent border-2 border-white/20 text-white px-10 py-5 rounded-full font-black uppercase tracking-widest text-xs hover:bg-white hover:text-orbita-blue transition shadow-xl transform hover:scale-105">Book Quotation</a>
+
+   {{-- 4. COLLABORATE CTA - FORCED DARK BACKGROUND --}}
+    <section class="py-24 container mx-auto px-4">
+        {{-- Added 'important' inline style to prevent layout overrides --}}
+        <div class="relative rounded-[3rem] md:rounded-[4.5rem] overflow-hidden shadow-2xl border border-white/10" 
+             style="background-color: #021256 !important;">
+            
+            {{-- Creative Abstract Layers --}}
+            <div class="absolute inset-0 z-0 pointer-events-none">
+                {{-- Deep Blue Glow --}}
+                <div class="absolute top-[-10%] right-[-5%] w-[60%] h-[80%] bg-orbita-blue/20 rounded-full blur-[120px]"></div>
+                {{-- Subtle Gold Accent Glow --}}
+                <div class="absolute bottom-[-10%] left-[-5%] w-[40%] h-[60%] bg-orbita-gold/10 rounded-full blur-[100px]"></div>
+                
+                {{-- Classy Tech Grid Overlay --}}
+                <div class="absolute inset-0 opacity-[0.1]" 
+                     style="background-image: radial-gradient(circle, #d8aa3f 1px, transparent 1px); background-size: 40px 40px;">
                 </div>
+            </div>
+
+            {{-- Content Container --}}
+            <div class="relative z-10 px-6 py-20 md:p-32 text-center">
+                <div class="max-w-4xl mx-auto">
+                    
+                    <span class="inline-block px-5 py-1.5 mb-10 border border-orbita-gold/30 bg-orbita-gold/5 text-orbita-gold text-[9px] md:text-xs font-black uppercase tracking-[0.5em] rounded-full">
+                        Premium Hotel Security
+                    </span>
+
+                    {{-- High-Contrast Heading --}}
+                    <h2 class="text-white text-3xl md:text-7xl font-black mb-10 leading-[1.1] uppercase tracking-tighter">
+                        Innovating <br class="hidden md:block"> 
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-orbita-gold via-yellow-400 to-orbita-gold">Hospitality Tech</span> 
+                        Solutions.
+                    </h2>
+
+                    <p class="text-gray-400 text-sm md:text-xl font-medium max-w-2xl mx-auto mb-14 leading-relaxed">
+                        Join the elite hospitality brands across East Africa leveraging Orbita's intelligent security and world-class hardware.
+                    </p>
+
+                    {{-- Button Group: Classy & Compact --}}
+                    <div class="flex flex-wrap justify-center items-center gap-6">
+                        {{-- Primary CTA --}}
+                        <a href="{{ route('contact') }}" class="w-max">
+                            <button class="px-10 md:px-14 py-4 md:py-6 bg-orbita-gold text-white font-black uppercase tracking-widest text-[10px] md:text-xs rounded-full hover:scale-105 transition-all duration-300 shadow-2xl shadow-orbita-gold/30">
+                                Get a Quote
+                            </button>
+                        </a>
+
+                        {{-- Secondary CTA --}}
+                        <a href="#" class="w-max">
+                            <button class="px-10 md:px-14 py-4 md:py-6 bg-white/5 backdrop-blur-xl border border-white/10 text-white font-black uppercase tracking-widest text-[10px] md:text-xs rounded-full hover:bg-white hover:text-[#020617] transition-all duration-300">
+                                View Catalog
+                            </button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Background Branded Watermark --}}
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none opacity-[0.05] select-none">
+                <h3 class="text-[12vw] font-black text-white whitespace-nowrap tracking-tighter">ORBITA KENYA</h3>
             </div>
         </div>
     </section>
 
+{{-- 5. PARTNER CTA - LUXURY METALLIC EDITION --}}
     <section class="pb-24 container mx-auto px-4">
-        <div class="bg-orbita-gold rounded-[3rem] p-12 md:p-20 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12 shadow-3xl">
-             <div class="relative z-10 text-center md:text-left text-white">
-                <h2 class="text-4xl font-black uppercase tracking-tighter mb-4">Partner With Us</h2>
-                <p class="font-bold opacity-90 max-w-md">Become a certified reseller and access wholesale pricing for smart hotel hardware.</p>
+        <div class="relative rounded-[3rem] overflow-hidden shadow-2xl border border-orbita-gold/20" 
+             style="background: linear-gradient(135deg, #C5A059 0%, #D4AF37 50%, #B8860B 100%) !important;">
+            
+            {{-- Abstract Geometric Pattern Overlay --}}
+            <div class="absolute inset-0 opacity-10 pointer-events-none" 
+                 style="background-image: url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"1\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');">
             </div>
-            <div class="relative z-10">
-                <a href="#" class="bg-orbita-blue text-white px-12 py-5 rounded-full font-black uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-orbita-blue transition shadow-xl inline-block">Join Network</a>
+
+            {{-- Glassmorphism Glows --}}
+            <div class="absolute top-0 left-0 w-full h-full">
+                <div class="absolute -top-24 -left-24 w-96 h-96 bg-white/20 rounded-full blur-[100px]"></div>
+                <div class="absolute bottom-0 right-0 w-64 h-64 bg-black/10 rounded-full blur-[80px]"></div>
+            </div>
+
+            <div class="relative z-10 p-10 md:p-20 flex flex-col md:flex-row items-center justify-between gap-12">
+                
+                <div class="text-center md:text-left text-white max-w-2xl">
+                    {{-- Small Badge --}}
+                    <div class="inline-flex items-center gap-2 px-3 py-1 mb-6 bg-black/10 rounded-full border border-white/20">
+                        <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                        <span class="text-[9px] font-black uppercase tracking-widest">Authorized Reseller Program</span>
+                    </div>
+
+                    <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-6 leading-none">
+                        Partner <br class="hidden md:block"> With <span class="text-black/40">Orbita.</span>
+                    </h2>
+                    
+                    <p class="text-sm md:text-lg font-bold text-white/90 max-w-md leading-relaxed">
+                        Scale your business by becoming a certified reseller. Access exclusive wholesale pricing and priority technical support.
+                    </p>
+                </div>
+
+                {{-- CTA Button --}}
+                <div class="relative w-max">
+                    <a href="{{ route('contact') }}" class="group block">
+                        {{-- Button Shadow Glow --}}
+                        <div class="absolute -inset-1 bg-black/20 rounded-full blur-xl group-hover:bg-white/20 transition duration-500"></div>
+                        
+                        <button class="relative bg-orbita-blue text-white px-10 md:px-14 py-5 rounded-full font-black uppercase tracking-[0.2em] text-[10px] md:text-xs hover:bg-white hover:text-orbita-blue transition-all duration-300 shadow-2xl flex items-center gap-3">
+                            Join the Network
+                            <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin=\"round\" stroke-width=\"3\" d=\"M13 7l5 5m0 0l-5 5m5-5H6\"/></svg>
+                        </button>
+                    </a>
+                </div>
+
+            </div>
+
+            {{-- Subtle Bottom Text Decor --}}
+            <div class="absolute -bottom-4 left-10 opacity-[0.05] pointer-events-none select-none">
+                <h3 class="text-8xl font-black text-white italic">PARTNERSHIP</h3>
             </div>
         </div>
     </section>
+
+    {{-- 6. TESTIMONIALS --}}
     <section class="py-28 relative bg-white overflow-hidden">
         <div class="absolute top-0 right-0 w-96 h-96 bg-gray-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         
@@ -342,6 +450,7 @@
         </div>
     </section>
 
+    {{-- 7. WELCOME MODAL --}}
     <div x-data="{ show: true }" x-show="show" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center px-4 backdrop-blur-sm bg-orbita-blue/60">
         <div class="bg-white rounded-[2rem] shadow-2xl max-w-md w-full p-2 relative overflow-hidden animate-float">
             <button @click="show = false" class="absolute top-4 right-4 z-20 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition">×</button>

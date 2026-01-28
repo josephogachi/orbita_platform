@@ -5,39 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Orbita Kenya | Smart Hospitality Solutions</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
+<body class="bg-orbita-light text-gray-900 antialiased flex flex-col min-h-screen">
 
-<script type="text/javascript">
-var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-(function(){
-var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-s1.async=true;
-s1.src='https://embed.tawk.to/YOUR_UNIQUE_ID/default';
-s1.charset='UTF-8';
-s1.setAttribute('crossorigin','*');
-s0.parentNode.insertBefore(s1,s0);
-})();
-
-@auth
-    Tawk_API.onLoad = function(){
-        Tawk_API.setAttributes({
-            'name'  : '{{ auth()->user()->name }}',
-            'email' : '{{ auth()->user()->email }}'
-        }, function(error){});
-    };
-@endauth
-</script>
-
-<body class="bg-orbita-light text-gray-900 antialiased overflow-x-hidden selection:bg-orbita-gold selection:text-white flex flex-col min-h-screen">
-
-    {{-- Top Bar --}}
+    {{-- 1. TOP BAR --}}
     <div class="bg-orbita-blue text-white text-xs font-semibold relative overflow-hidden border-b border-white/10">
         <div class="container mx-auto px-4 py-2 flex flex-col md:flex-row justify-between items-center gap-2 relative z-10">
             <div class="flex items-center gap-4 text-white/80">
@@ -51,6 +27,7 @@ s0.parentNode.insertBefore(s1,s0);
                 </span>
             </div>
             
+            {{-- Countdown / Promo Banner Logic --}}
             @if(isset($settings) && $settings->show_countdown && $settings->countdown_end)
             <div x-data="countdown('{{ $settings->countdown_end }}')" class="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full">
                 <span class="text-orbita-gold font-black uppercase tracking-widest text-[10px]">{{ $settings->promo_banner_text ?? 'OFFER:' }}</span>
@@ -70,68 +47,16 @@ s0.parentNode.insertBefore(s1,s0);
         </div>
     </div>
 
-    {{-- Header --}}
-    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            
-            <a href="/" class="flex items-center">
-                @if(isset($settings) && $settings->logo_path)
-                    <img src="{{ asset('storage/' . $settings->logo_path) }}" 
-                         class="h-14 md:h-24 w-auto object-contain transition-transform duration-300 hover:scale-105" 
-                         alt="{{ $settings->shop_name }}">
-                @else
-                    <div class="leading-tight group">
-                        <span class="block text-3xl font-black text-orbita-blue tracking-tighter group-hover:text-orbita-gold transition">ORBITA</span>
-                        <span class="block text-xs font-bold text-orbita-gold uppercase tracking-[0.3em] group-hover:text-orbita-blue transition">Kenya</span>
-                    </div>
-                @endif
-            </a>
+    {{-- 2. NAVIGATION --}}
+    @include('layouts.navigation')
 
-            <nav class="hidden lg:flex items-center gap-8 font-bold text-xs uppercase tracking-widest text-gray-600">
-                <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Home</a>
-                <a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Products</a>
-                <a href="{{ route('work') }}" class="{{ request()->routeIs('work') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Our Work</a>
-                <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">About</a>
-                <a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'text-orbita-blue border-orbita-gold' : 'border-transparent' }} hover:text-orbita-gold py-2 transition-all border-b-2 hover:border-orbita-gold">Contact</a>
-            </nav>
-
-            <div class="flex items-center gap-4">
-                {{-- Account Icon: Dynamic Logic --}}
-                @auth
-                    <a href="{{ url('/dashboard') }}" class="p-2 text-gray-400 hover:text-orbita-blue transition relative" title="My Dashboard">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        @if(auth()->user()->orders()->count() > 0)
-                            <span class="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
-                        @endif
-                    </a>
-                @else
-                    <a href="{{ route('login') }}" class="p-2 text-gray-400 hover:text-orbita-blue transition" title="Login">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
-                    </a>
-                @endauth
-
-                {{-- Cart Icon: Count Logic --}}
-                <a href="{{ route('cart.index') }}" class="p-2 text-gray-400 hover:text-orbita-blue transition relative" title="View Cart">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                    @if(!Cart::isEmpty())
-                        <span class="absolute top-0 right-0 bg-orbita-gold text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
-                            {{ Cart::getContent()->count() }}
-                        </span>
-                    @endif
-                </a>
-
-                <a href="#" class="hidden md:inline-flex bg-orbita-blue text-white px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-orbita-gold hover:shadow-lg transition transform hover:-translate-y-0.5">
-                    Catalog
-                </a>
-            </div>
-        </div>
-    </header>
-
+    {{-- 3. MAIN CONTENT SLOT --}}
     <main class="flex-grow">
+        {{ $slot ?? '' }}
         @yield('content')
     </main>
 
-    {{-- Footer --}}
+    {{-- 4. FOOTER --}}
     <footer class="bg-orbita-dark text-white pt-24 pb-10 relative overflow-hidden mt-auto border-t border-orbita-blue">
         <div class="absolute top-0 left-0 w-96 h-96 bg-orbita-gold/5 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
         <div class="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
@@ -188,23 +113,31 @@ s0.parentNode.insertBefore(s1,s0);
         </div>
     </footer>
 
-    <script>
-        function countdown(expiry) {
-            return {
-                expiry: new Date(expiry).getTime(),
-                days: '00', hours: '00', minutes: '00',
-                init() {
-                    setInterval(() => {
-                        const now = new Date().getTime();
-                        const distance = this.expiry - now;
-                        if (distance < 0) return;
-                        this.days = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
-                        this.hours = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
-                        this.minutes = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
-                    }, 1000);
-                }
-            }
-        }
+   {{-- Replace the messy end of your file with this clean version --}}
+    </footer>
+
+    {{-- Chat Widget Script --}}
+    <script type="text/javascript">
+        var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+        (function(){
+            var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+            s1.async=true;
+            s1.src='https://embed.tawk.to/YOUR_UNIQUE_ID/default';
+            s1.charset='UTF-8';
+            s1.setAttribute('crossorigin','*');
+            s0.parentNode.insertBefore(s1,s0);
+        })();
     </script>
 </body>
 </html>
+    </script>
+</body>
+</html>
+                    </form>
+                </div>
+            @else
+                <div class="px-4">
+                    <div class="font-bold text-gray-800">{{ Auth::user()->name }}</div>
+                    <div class="text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                </div>
+                <div class="mt-3 space

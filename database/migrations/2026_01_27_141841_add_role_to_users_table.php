@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $blueprint) {
             // Options: 'admin', 'sales', 'customer'
             // We default to 'customer' so regular sign-ups don't get system access.
-            $blueprint->string('role')->default('customer')->after('email');
+            
+            //$blueprint->string('role')->default('customer')->after('email');
         });
     }
 
