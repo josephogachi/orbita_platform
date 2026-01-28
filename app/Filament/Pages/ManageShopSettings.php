@@ -8,6 +8,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -27,10 +28,13 @@ class ManageShopSettings extends Page implements HasForms
 
     public function mount(): void
     {
-        // Get the first setting row or create it with defaults
+        // Fetch settings or create with expanded defaults
         $settings = ShopSetting::firstOrCreate([], [
             'shop_name' => 'Orbita Solutions',
             'vat_percentage' => 16,
+            'bank_name' => 'CO-OPERATIVE BANK',
+            'account_name' => 'ORBITAHTECH SYSTEMS KENYA LTD.',
+            'account_number' => '01100542859001',
         ]);
 
         $this->form->fill($settings->toArray());
@@ -41,55 +45,85 @@ class ManageShopSettings extends Page implements HasForms
         return $form
             ->schema([
                 // 1. BRANDING & CONTACT INFO
-                Section::make('General Branding & Contact')->schema([
-                    TextInput::make('shop_name')
-                        ->required()
-                        ->label('Company Name'),
-                    
-                    FileUpload::make('logo_path')
-                        ->label('Website Logo')
-                        ->image()
-                        ->directory('settings')
-                        ->columnSpanFull(),
-
-                    TextInput::make('phone_contact')
-                        ->label('Support Phone')
-                        ->placeholder('+254 700 000 000'),
-
-                    TextInput::make('email_contact')
-                        ->label('Support Email')
-                        ->email(),
+                Section::make('General Branding & Contact')
+                    ->description('Details used for the website header/footer and public profile.')
+                    ->schema([
+                        TextInput::make('shop_name')
+                            ->required()
+                            ->label('Company Name'),
                         
-                    TextInput::make('shop_address')
-                        ->label('Physical Address'),
-                ])->columns(2),
+                        FileUpload::make('logo_path')
+                            ->label('Website Logo')
+                            ->image()
+                            ->directory('settings')
+                            ->columnSpanFull(),
 
-                // 2. HOMEPAGE COUNTDOWN & PROMOS
-                Section::make('Homepage Promotions')->schema([
-                    Toggle::make('show_countdown')
-                        ->label('Enable Top Bar Countdown')
-                        ->default(false)
-                        ->columnSpanFull(),
+                        Grid::make(2)->schema([
+                            TextInput::make('phone_contact')
+                                ->label('Support Phone')
+                                ->placeholder('+254 700 000 000'),
 
-                    TextInput::make('promo_banner_text')
-                        ->label('Countdown Text')
-                        ->placeholder('FLASH SALE ENDS IN:')
-                        ->hidden(fn (callable $get) => !$get('show_countdown')),
+                            TextInput::make('email_contact')
+                                ->label('Support Email')
+                                ->email(),
+                        ]),
+                        
+                        TextInput::make('shop_address')
+                            ->label('Showroom Address (Main Street)')
+                            ->placeholder('G.floor BBS Mall, 12st Eastleigh Nairobi'),
 
-                    DateTimePicker::make('countdown_end')
-                        ->label('Offer Expiry Date')
-                        ->native(false) // Uses Filament's nice date picker
-                        ->hidden(fn (callable $get) => !$get('show_countdown')),
-                ])->columns(2),
+                        TextInput::make('office_address')
+                            ->label('Corporate Office Address')
+                            ->placeholder('Decale palace hotel 2nd floor 12st'),
+                    ])->columns(1),
 
-                // 3. FINANCIAL SETTINGS
-                Section::make('Tax & Financials')->schema([
-                    TextInput::make('vat_percentage')
-                        ->label('VAT Percentage (%)')
-                        ->numeric()
-                        ->suffix('%')
-                        ->required(),
-                ])->columns(1)
+                // 2. BANKING & TAX (NEW SECTION FOR INVOICES)
+                Section::make('Financials & Banking')
+                    ->description('These details are used to generate your PDF invoices.')
+                    ->schema([
+                        Grid::make(2)->schema([
+                            TextInput::make('bank_name')
+                                ->label('Bank Name')
+                                ->required(),
+                            
+                            TextInput::make('account_name')
+                                ->label('Account Name')
+                                ->required(),
+                        ]),
+
+                        Grid::make(2)->schema([
+                            TextInput::make('account_number')
+                                ->label('Account Number')
+                                ->required(),
+
+                            TextInput::make('vat_percentage')
+                                ->label('VAT Percentage (%)')
+                                ->numeric()
+                                ->suffix('%')
+                                ->required(),
+                        ]),
+                    ]),
+
+                // 3. HOMEPAGE COUNTDOWN & PROMOS
+                Section::make('Homepage Promotions')
+                    ->description('Control the visibility of the top-bar countdown timer.')
+                    ->schema([
+                        Toggle::make('show_countdown')
+                            ->label('Enable Top Bar Countdown')
+                            ->default(false)
+                            ->live() // Essential to show/hide fields immediately
+                            ->columnSpanFull(),
+
+                        TextInput::make('promo_banner_text')
+                            ->label('Countdown Text')
+                            ->placeholder('FLASH SALE ENDS IN:')
+                            ->visible(fn ($get) => $get('show_countdown')),
+
+                        DateTimePicker::make('countdown_end')
+                            ->label('Offer Expiry Date')
+                            ->native(false)
+                            ->visible(fn ($get) => $get('show_countdown')),
+                    ])->columns(2),
             ])
             ->statePath('data');
     }
@@ -97,8 +131,11 @@ class ManageShopSettings extends Page implements HasForms
     public function save(): void
     {
         $settings = ShopSetting::first();
-        $settings->update($this->form->getState());
+        $settings->update($this->data);
 
-        Notification::make()->title('Settings Saved Successfully')->success()->send();
+        Notification::make()
+            ->title('Settings Saved Successfully')
+            ->success()
+            ->send();
     }
 }
