@@ -52,10 +52,15 @@ class ManageShopSettings extends Page implements HasForms
                             ->required()
                             ->label('Company Name'),
                         
+                        // 👇 CRITICAL UPDATE: Forces file to be public
                         FileUpload::make('logo_path')
                             ->label('Website Logo')
                             ->image()
+                            ->disk('public')       // Stores in storage/app/public
                             ->directory('settings')
+                            ->visibility('public') // Ensures browser can see it
+                            ->maxSize(5120)        // 5MB Limit
+                            ->preserveFilenames()
                             ->columnSpanFull(),
 
                         Grid::make(2)->schema([
@@ -77,7 +82,7 @@ class ManageShopSettings extends Page implements HasForms
                             ->placeholder('Decale palace hotel 2nd floor 12st'),
                     ])->columns(1),
 
-                // 2. BANKING & TAX (NEW SECTION FOR INVOICES)
+                // 2. BANKING & TAX
                 Section::make('Financials & Banking')
                     ->description('These details are used to generate your PDF invoices.')
                     ->schema([
@@ -111,7 +116,7 @@ class ManageShopSettings extends Page implements HasForms
                         Toggle::make('show_countdown')
                             ->label('Enable Top Bar Countdown')
                             ->default(false)
-                            ->live() // Essential to show/hide fields immediately
+                            ->live()
                             ->columnSpanFull(),
 
                         TextInput::make('promo_banner_text')
@@ -130,8 +135,12 @@ class ManageShopSettings extends Page implements HasForms
 
     public function save(): void
     {
+        // 👇 CRITICAL FIX: Use getState() instead of $this->data
+        // This processes the temporary file upload and returns the final path.
+        $data = $this->form->getState();
+
         $settings = ShopSetting::first();
-        $settings->update($this->data);
+        $settings->update($data);
 
         Notification::make()
             ->title('Settings Saved Successfully')

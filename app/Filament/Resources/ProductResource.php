@@ -188,7 +188,7 @@ class ProductResource extends Resource
                     ->label('Was')
                     ->money('KES')
                     ->color('gray')
-                    ->lineThrough() // Native Filament v3 method
+                    ->extraAttributes(['class' => 'line-through text-gray-400']) // Injects Tailwind CSS directly
                     ->toggleable(),
 
                 Tables\Columns\IconColumn::make('is_hot')

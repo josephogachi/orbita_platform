@@ -77,4 +77,38 @@ Route::post('/intasend/webhook', [PaymentStatusController::class, 'handleWebhook
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
+
+// routes/web.php - Paste this at the very bottom
+
+Route::get('/debug-logo', function () {
+    // 1. Fetch Settings
+    $settings = \App\Models\ShopSetting::first();
+    
+    if (!$settings) {
+        return "❌ No ShopSettings found in database.";
+    }
+
+    $rawPath = $settings->logo_path;
+    
+    // 2. Clean the path if it is JSON or Array
+    $cleanPath = $rawPath;
+    if (is_array($rawPath)) {
+        $cleanPath = reset($rawPath);
+    } elseif (is_string($rawPath) && str_contains($rawPath, '[')) {
+        $decoded = json_decode($rawPath, true);
+        $cleanPath = is_array($decoded) ? reset($decoded) : $rawPath;
+    }
+
+    // 3. Check both disk locations
+    $publicDisk = \Illuminate\Support\Facades\Storage::disk('public');
+    $localDisk = \Illuminate\Support\Facades\Storage::disk('local');
+
+    return [
+        '1. RAW DB VALUE' => $rawPath,
+        '2. CLEAN PATH' => $cleanPath,
+        '3. Exists in PUBLIC disk?' => $publicDisk->exists($cleanPath) ? '✅ YES' : '❌ NO',
+        '4. Exists in PRIVATE disk?' => $localDisk->exists($cleanPath) ? '⚠️ YES (Wrong Folder)' : '❌ NO',
+        '5. Full Computer Path' => storage_path('app/public/' . $cleanPath),
+    ];
+});
 require __DIR__.'/auth.php';

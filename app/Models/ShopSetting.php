@@ -9,26 +9,33 @@ class ShopSetting extends Model
 {
     use HasFactory;
 
-   protected $fillable = [
-    'shop_name',
-    'shop_phone',
-    'shop_address', // Using this for Showroom
-    'office_address', // Using this for Decale Palace
-    'phone_contact',
-    'email_contact',
-    'vat_percentage',
-    'logo_path',
-    'show_countdown',
-    'promo_banner_text',
-    'countdown_end',
-    'bank_name',
-    'account_name',
-    'account_number',
-];
+    /**
+     * The attributes that are mass assignable.
+     */
+    protected $fillable = [
+        'shop_name',
+        'shop_phone',
+        'shop_address',     // Showroom Address
+        'office_address',   // Corporate Office Address
+        'phone_contact',
+        'email_contact',
+        'vat_percentage',
+        'logo_path',        // Stores the filename string (e.g., "settings/logo.png")
+        'show_countdown',
+        'promo_banner_text',
+        'countdown_end',
+        'bank_name',
+        'account_name',
+        'account_number',
+    ];
 
+    /**
+     * The attributes that should be cast.
+     * Note: We intentionally DO NOT cast 'logo_path' to array.
+     */
     protected $casts = [
-        'show_countdown' => 'boolean', // Essential for the toggle to work
-        'countdown_end' => 'datetime', // Essential for the countdown timer
-        'vat_percentage' => 'integer',
+        'show_countdown' => 'boolean',  // Handles the toggle switch
+        'countdown_end' => 'datetime',  // Handles the date picker
+        'vat_percentage' => 'integer',  // Stores 16% as 16
     ];
 }

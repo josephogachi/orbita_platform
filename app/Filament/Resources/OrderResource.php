@@ -12,6 +12,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
+use Filament\Forms\Components\Grid;
 
 class OrderResource extends Resource
 {
@@ -78,19 +79,39 @@ class OrderResource extends Resource
             ])->columnSpan(2),
 
             Forms\Components\Group::make()->schema([
-                // 3. Customer Info
+                // 3. Customer & Shipping Info
                 Forms\Components\Section::make('Customer & Shipping')->schema([
-                    Forms\Components\Textarea::make('shipping_address')
-                        ->label('Delivery Address')
-                        ->rows(4)
-                        ->required(),
-                    
-                    Forms\Components\Placeholder::make('grand_total_display')
-                        ->label('Grand Total')
-                        ->content(fn (Order $record): string => 'KES ' . number_format($record->grand_total)),
-                    
-                    Forms\Components\Hidden::make('grand_total'),
-                ]),
+    Forms\Components\Textarea::make('shipping_address')
+        ->label('Delivery Address')
+        ->rows(4)
+        ->required(),
+
+    Grid::make(2)->schema([
+        // 1. Shipping Cost
+        Forms\Components\TextInput::make('shipping_cost')
+            ->label('Shipping Fee')
+            ->numeric()
+            ->prefix('KES')
+            ->default(0.00)
+            ->required(),
+
+        // 2. Shipping Method
+        Forms\Components\Select::make('shipping_method')
+            ->label('Shipping Method')
+            ->options([
+                'Rider' => 'Local Rider (Nairobi)',
+                'G4S' => 'G4S Courier',
+                'Wells Fargo' => 'Wells Fargo',
+                'Pickup' => 'Office Pickup',
+                'Other' => 'Other Courier',
+            ])
+            ->native(false),
+    ]),
+    
+    Forms\Components\Placeholder::make('grand_total_display')
+        ->label('Grand Total (Excl. updated shipping)')
+        ->content(fn (Order $record): string => 'KES ' . number_format($record->grand_total)),
+]),
 
                 // 4. Admin Notes
                 Forms\Components\Section::make('Internal Notes')->schema([

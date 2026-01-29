@@ -4,9 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PaymentStatusController;
 use App\Models\Product;
-use App\Http\Controllers\Webhook\IntaSendWebhookController;
 
-Route::post('/intasend/webhook', [IntaSendWebhookController::class, 'handle']);
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -21,9 +19,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 /**
- * 2. IntaSend Payment Webhook
- * We add BOTH POST and GET because IntaSend uses GET for the initial 
- * "Challenge" verification and POST for the actual payment data.
+ * 2. IntaSend Payment Webhook (THE ONE TRUE ROUTE)
+ * We use match(['get', 'post']) to handle:
+ * - GET: IntaSend "Challenge" verification (when you save settings)
+ * - POST: The actual "Payment Complete" signal
  */
 Route::match(['get', 'post'], '/intasend/webhook', [PaymentStatusController::class, 'handleWebhook'])
     ->name('api.intasend.webhook');
@@ -33,7 +32,4 @@ Route::match(['get', 'post'], '/intasend/webhook', [PaymentStatusController::cla
  */
 Route::get('/products', function() {
     return Product::all();
-
-Route::post('/intasend/webhook', [IntaSendWebhookController::class, 'handle']);
-
 });

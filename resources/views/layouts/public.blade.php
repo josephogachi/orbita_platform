@@ -116,6 +116,8 @@
    {{-- Replace the messy end of your file with this clean version --}}
     </footer>
 
+   </footer>
+
     {{-- Chat Widget Script --}}
     <script type="text/javascript">
         var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
@@ -130,14 +132,9 @@
     </script>
 </body>
 </html>
+</body>
+</html>
     </script>
 </body>
 </html>
-                    </form>
-                </div>
-            @else
-                <div class="px-4">
-                    <div class="font-bold text-gray-800">{{ Auth::user()->name }}</div>
-                    <div class="text-sm text-gray-500">{{ Auth::user()->email }}</div>
-                </div>
-                <div class="mt-3 space
+                
