@@ -10,14 +10,13 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::table('users', function (Blueprint $blueprint) {
-            // Options: 'admin', 'sales', 'customer'
-            // We default to 'customer' so regular sign-ups don't get system access.
-            
-            //$blueprint->string('role')->default('customer')->after('email');
-        });
-    }
+{
+    Schema::table('users', function (Blueprint $table) {
+        if (!Schema::hasColumn('users', 'role')) {
+            $table->string('role')->default('user');
+        }
+    });
+}
 
     /**
      * Reverse the migrations.

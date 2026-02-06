@@ -2,8 +2,9 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20">
             
-            {{-- 1. LEFT SIDE: LOGO --}}
+            {{-- 1. LEFT SIDE: LOGO & LINKS --}}
             <div class="flex">
+                {{-- Logo --}}
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('home') }}">
                         <x-application-logo class="block h-10 w-auto fill-current text-orbita-blue" />
@@ -13,8 +14,12 @@
                 {{-- Desktop Links --}}
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('home')" :active="request()->routeIs('home')">Home</x-nav-link>
+                    
+                    {{-- ✅ ADDED: About Us Link --}}
+                    <x-nav-link :href="route('about')" :active="request()->routeIs('about')">About Us</x-nav-link>
+                    
                     <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">Products</x-nav-link>
-                    <x-nav-link :href="route('work')" :active="request()->routeIs('work')">Our Work</x-nav-link>
+                    <x-nav-link :href="route('work')" :active="request()->routeIs('work*')">Our Work</x-nav-link>
                     <x-nav-link :href="route('contact')" :active="request()->routeIs('contact')">Contact</x-nav-link>
                 </div>
             </div>
@@ -85,8 +90,14 @@
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-white border-t border-gray-100">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">Home</x-responsive-nav-link>
+            
+            {{-- ✅ ADDED: Mobile About Us Link --}}
+            <x-responsive-nav-link :href="route('about')" :active="request()->routeIs('about')">About Us</x-responsive-nav-link>
+            
             <x-responsive-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">Products</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('work')" :active="request()->routeIs('work')">Our Work</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('work')" :active="request()->routeIs('work*')">Our Work</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('contact')" :active="request()->routeIs('contact')">Contact</x-responsive-nav-link>
+            
             @auth
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">Portal</x-responsive-nav-link>
             @endauth

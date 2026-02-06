@@ -89,8 +89,7 @@ class SideAdResource extends Resource
                 Tables\Columns\ImageColumn::make('image_path')
                     ->label('Thumbnail')
                     ->height(60)
-                    ->backgroundStyle('gray') // High contrast for product cutouts
-                    ->square(),
+                    ->square(), // Removed invalid backgroundStyle method
 
                 Tables\Columns\TextColumn::make('title')
                     ->label('Ad Heading')
@@ -112,7 +111,7 @@ class SideAdResource extends Resource
                     ->badge(),
             ])
             ->defaultSort('sort_order', 'asc')
-            ->reorderable('sort_order') // Enables manual drag-drop
+            ->reorderable('sort_order')
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),

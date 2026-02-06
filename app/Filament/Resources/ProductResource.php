@@ -15,7 +15,6 @@ use Illuminate\Support\Str;
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-bolt';
     protected static ?string $navigationGroup = 'Shop Management';
     protected static ?int $navigationSort = 3;
@@ -24,10 +23,9 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
-                // LEFT & MIDDLE COLUMNS (Main Content)
+                // LEFT & MIDDLE COLUMNS
                 Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make('Product Information')
-                        ->description('Basic details and technical specifications.')
                         ->schema([
                             Forms\Components\TextInput::make('name')
                                 ->required()
@@ -37,24 +35,24 @@ class ProductResource extends Resource
 
                             Forms\Components\TextInput::make('slug')
                                 ->required()
-                                ->maxLength(255)
                                 ->disabled()
                                 ->dehydrated()
                                 ->unique(Product::class, 'slug', ignoreRecord: true),
 
                             Forms\Components\MarkdownEditor::make('description')
-                                ->label('Marketing Description')
+                                ->label('Marketing Description (Markdown Supported)')
+                                ->helperText('Use **bold** or - lists for the masterpiece view.')
                                 ->columnSpanFull(),
 
                             Forms\Components\Textarea::make('technical_specs')
                                 ->label('Technical Specifications')
-                                ->helperText('Enter each specification on a new line.')
-                                ->placeholder("Bluetooth 5.0\nBattery: 4x AA\nMaterial: Zinc Alloy")
+                                ->helperText('Format as "Key: Value" on each line (e.g., Material: Zinc Alloy)')
+                                ->placeholder("Bluetooth: 5.0\nBattery: 4x AA\nFinish: Matte Black")
                                 ->rows(5)
                                 ->columnSpanFull(),
                         ])->columns(2),
 
-                    Forms\Components\Section::make('Product Images')
+                    Forms\Components\Section::make('Assets & Media')
                         ->schema([
                             Forms\Components\FileUpload::make('images')
                                 ->multiple()
@@ -64,63 +62,54 @@ class ProductResource extends Resource
                                 ->image()
                                 ->imageEditor()
                                 ->columnSpanFull(),
+
+                            Forms\Components\FileUpload::make('pdf_datasheet')
+                                ->label('Technical Datasheet (PDF)')
+                                ->directory('product-docs')
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->helperText('Only logged-in users can download this on the frontend.')
+                                ->maxSize(5120), 
                         ])
                 ])->columnSpan(2),
 
-                // RIGHT COLUMN (Price, Inventory & Marketing)
+                // RIGHT COLUMN
                 Forms\Components\Group::make()->schema([
                     
-                    // 1. PRICING
+                    // 1. INVENTORY & LOGISTICS (Restored Stock Quantity)
+                    Forms\Components\Section::make('Inventory & Logistics')->schema([
+                        Forms\Components\TextInput::make('sku')
+                            ->label('Product SKU')
+                            ->default(fn () => 'ORB-' . strtoupper(Str::random(6)))
+                            ->required(),
+
+                        // ✅ RESTORED: Stock Input
+                        Forms\Components\TextInput::make('stock_quantity')
+                            ->label('Current Stock')
+                            ->numeric()
+                            ->default(0)
+                            ->required()
+                            ->prefix('Qty'),
+
+                        Forms\Components\TextInput::make('weight')
+                            ->label('Unit Weight')
+                            ->numeric()
+                            ->default(1.0)
+                            ->suffix('kg')
+                            ->helperText('Used for shipping fees.')
+                            ->required(),
+                    ]),
+
+                    // 2. PRICING
                     Forms\Components\Section::make('Pricing')->schema([
                         Forms\Components\TextInput::make('price')
                             ->numeric()
                             ->required()
-                            ->prefix('KES')
-                            ->helperText('Active selling price.'),
+                            ->prefix('KES'),
                         
                         Forms\Components\TextInput::make('old_price')
                             ->numeric()
-                            ->label('Original (Old) Price')
-                            ->prefix('KES')
-                            ->helperText('Setting this triggers a discount badge.'),
-
-                        Forms\Components\TextInput::make('wholesale_price')
-                            ->numeric()
+                            ->label('Strike-through Price')
                             ->prefix('KES'),
-
-                        Forms\Components\TextInput::make('cost_price')
-                            ->numeric()
-                            ->label('Cost (Internal)')
-                            ->helperText('Visible only to authorized admins')
-                            ->prefix('KES'),
-                    ]),
-
-                    // 2. MARKETING
-                    Forms\Components\Section::make('Marketing & Visibility')->schema([
-                        Forms\Components\Grid::make(2)->schema([
-                            Forms\Components\Toggle::make('is_hot')
-                                ->label('Flash Sale')
-                                ->onColor('danger'),
-                            
-                            Forms\Components\Toggle::make('is_new')
-                                ->label('New Arrival')
-                                ->default(true)
-                                ->onColor('success'),
-
-                            Forms\Components\Toggle::make('is_sponsored')
-                                ->label('Sponsored')
-                                ->onColor('warning'),
-                                
-                            Forms\Components\Toggle::make('is_featured')
-                                ->label('Pin Home')
-                                ->default(false),
-                        ]),
-
-                        Forms\Components\TextInput::make('affiliate_link')
-                            ->label('Partner Link')
-                            ->placeholder('https://external-store.com')
-                            ->url()
-                            ->visible(fn (Forms\Get $get) => $get('is_sponsored')),
                     ]),
 
                     // 3. ASSOCIATIONS
@@ -128,31 +117,25 @@ class ProductResource extends Resource
                         Forms\Components\Select::make('category_id')
                             ->relationship('category', 'name')
                             ->required()
-                            ->searchable()
                             ->preload(),
 
                         Forms\Components\Select::make('brand_id')
                             ->relationship('brand', 'name')
-                            ->searchable()
                             ->preload(),
                     ]),
 
-                    // 4. INVENTORY
-                    Forms\Components\Section::make('Inventory Control')->schema([
-                        Forms\Components\TextInput::make('sku')
-                            ->label('Product SKU')
-                            ->default(fn () => 'ORB-' . strtoupper(Str::random(6)))
-                            ->required(),
-
-                        Forms\Components\TextInput::make('stock_quantity')
-                            ->numeric()
-                            ->required()
-                            ->default(0),
-
+                    // 4. STATUS
+                    Forms\Components\Section::make('Visibility')->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->label('Published')
                             ->default(true),
-                    ])
+                        
+                        Forms\Components\Toggle::make('is_featured')
+                            ->label('Featured on Home'),
+
+                        Forms\Components\Toggle::make('is_hot')
+                            ->label('Flash Sale / Hot'),
+                    ]),
                 ])->columnSpan(1)
             ])->columns(3);
     }
@@ -170,46 +153,26 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable()
-                    ->weight('bold')
-                    ->description(fn (Product $record) => Str::limit($record->description, 40)),
+                    ->weight('bold'),
                 
                 Tables\Columns\TextColumn::make('category.name')
-                    ->sortable()
                     ->badge()
                     ->color('info'),
 
                 Tables\Columns\TextColumn::make('price')
                     ->money('KES')
                     ->sortable()
-                    ->color('primary')
+                    ->color('success')
                     ->weight('bold'),
 
-                Tables\Columns\TextColumn::make('old_price')
-                    ->label('Was')
-                    ->money('KES')
-                    ->color('gray')
-                    ->extraAttributes(['class' => 'line-through text-gray-400']) // Injects Tailwind CSS directly
-                    ->toggleable(),
-
-                Tables\Columns\IconColumn::make('is_hot')
-                    ->label('Hot')
-                    ->boolean()
-                    ->trueColor('danger')
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('discount_percent')
-                    ->label('Disc.')
-                    ->getStateUsing(fn (Product $record) => $record->discount_percent > 0 ? "-{$record->discount_percent}%" : null)
-                    ->badge()
-                    ->color('warning')
-                    ->toggleable(),
+                Tables\Columns\TextColumn::make('weight')
+                    ->suffix(' kg')
+                    ->color('gray'),
 
                 Tables\Columns\TextColumn::make('stock_quantity')
                     ->label('Stock')
-                    ->numeric()
-                    ->sortable()
                     ->badge()
-                    ->color(fn ($state) => $state < 10 ? 'danger' : ($state < 50 ? 'warning' : 'success')),
+                    ->color(fn ($state) => $state < 10 ? 'danger' : 'success'),
 
                 Tables\Columns\ToggleColumn::make('is_active')
                     ->label('Live'),
@@ -217,16 +180,10 @@ class ProductResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('category')
                     ->relationship('category', 'name'),
-                
-                Tables\Filters\TernaryFilter::make('is_hot')->label('Hot Sale'),
-                Tables\Filters\TernaryFilter::make('is_active')->label('Published'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 

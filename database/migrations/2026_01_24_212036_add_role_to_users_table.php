@@ -10,12 +10,13 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::table('users', function (Blueprint $table) {
-            // Adds the 'role' column after the 'email' column
-            $table->string('role')->default('client')->after('email');
-        });
-    }
+{
+    Schema::table('users', function (Blueprint $table) {
+        if (!Schema::hasColumn('users', 'role')) {
+            $table->string('role')->default('user');
+        }
+    });
+}
 
     /**
      * Reverse the migrations.

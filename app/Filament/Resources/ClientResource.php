@@ -72,7 +72,8 @@ class ClientResource extends Resource
                 Tables\Columns\ImageColumn::make('logo_path')
                     ->label('Logo')
                     ->height(50)
-                    ->backgroundStyle('gray') // Helps see transparent white logos
+                    // FIXED: Replaced invalid 'backgroundStyle' with standard CSS injection
+                    ->extraAttributes(['style' => 'background-color: #f3f4f6; border-radius: 8px; padding: 2px;']) 
                     ->square(),
                 
                 Tables\Columns\TextColumn::make('name')

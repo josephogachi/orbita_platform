@@ -10,12 +10,15 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::create('shipping_zones', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
-    }
+{
+    Schema::create('shipping_zones', function (Blueprint $table) {
+        $table->id();
+        $table->string('name'); // e.g., "Nairobi Region"
+        $table->text('areas')->nullable(); // List of specific towns/areas
+        $table->boolean('is_active')->default(true);
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.

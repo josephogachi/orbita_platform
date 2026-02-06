@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PaymentStatusController;
 use App\Models\Product;
+use App\Http\Controllers\MpesaController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -33,3 +35,5 @@ Route::match(['get', 'post'], '/intasend/webhook', [PaymentStatusController::cla
 Route::get('/products', function() {
     return Product::all();
 });
+
+Route::post('/mpesa/callback', [MpesaController::class, 'handleCallback']);

@@ -9,8 +9,13 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        [x-cloak] { display: none !important; }
     </style>
+    @livewireStyles
 </head>
+
+@php $settings = \App\Models\ShopSetting::first(); @endphp
+
 <body class="bg-orbita-light text-gray-900 antialiased flex flex-col min-h-screen">
 
     {{-- 1. TOP BAR --}}
@@ -27,7 +32,6 @@
                 </span>
             </div>
             
-            {{-- Countdown / Promo Banner Logic --}}
             @if(isset($settings) && $settings->show_countdown && $settings->countdown_end)
             <div x-data="countdown('{{ $settings->countdown_end }}')" class="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full">
                 <span class="text-orbita-gold font-black uppercase tracking-widest text-[10px]">{{ $settings->promo_banner_text ?? 'OFFER:' }}</span>
@@ -73,58 +77,55 @@
                 <div>
                     <h4 class="text-orbita-gold font-bold uppercase text-xs tracking-[0.2em] mb-8">Corporate</h4>
                     <ul class="space-y-4 text-sm font-medium text-gray-400">
-                        <li><a href="#" class="hover:text-white hover:pl-2 transition-all inline-block">About Company</a></li>
-                        <li><a href="#" class="hover:text-white hover:pl-2 transition-all inline-block">Our Projects</a></li>
+                        <li><a href="{{ route('about') }}" class="hover:text-white hover:pl-2 transition-all inline-block">About Company</a></li>
+                        <li><a href="{{ route('work') }}" class="hover:text-white hover:pl-2 transition-all inline-block">Our Projects</a></li>
                     </ul>
                 </div>
 
                 <div>
                     <h4 class="text-orbita-gold font-bold uppercase text-xs tracking-[0.2em] mb-8">Support Center</h4>
                     <ul class="space-y-4 text-sm font-medium text-gray-400">
-                        <li><a href="#" class="hover:text-white hover:pl-2 transition-all inline-block">Installation Guide</a></li>
-                        <li><a href="#" class="hover:text-white hover:pl-2 transition-all inline-block">Warranty Policy</a></li>
+                        <li><a href="{{ route('policy.installation') }}" class="hover:text-white hover:pl-2 transition-all inline-block">Installation Guide</a></li>
+                        <li><a href="{{ route('policy.warranty') }}" class="hover:text-white hover:pl-2 transition-all inline-block">Warranty Policy</a></li>
                     </ul>
                 </div>
 
                 <div>
                     <h4 class="text-orbita-gold font-bold uppercase text-xs tracking-[0.2em] mb-8">Stay Connected</h4>
-                    <form class="relative">
-                        <input type="email" placeholder="Email Address" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-orbita-gold outline-none text-white">
-                        <button class="absolute right-1 top-1 bottom-1 bg-orbita-gold text-white px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-white hover:text-orbita-blue transition">Join</button>
+                    <form action="{{ route('subscribe.store') }}" method="POST" class="relative">
+                        @csrf
+                        <input type="email" name="email" required placeholder="Email Address" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-orbita-gold outline-none text-white transition-all">
+                        <button type="submit" class="absolute right-1 top-1 bottom-1 bg-orbita-gold text-white px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-white hover:text-orbita-blue transition">Join</button>
                     </form>
+                    <p class="text-[9px] text-gray-500 mt-2 uppercase tracking-tighter">Join the elite hotel managers list</p>
                 </div>
             </div>
 
             <div class="flex flex-col md:flex-row justify-between items-center text-[10px] text-gray-500 font-bold uppercase tracking-widest">
                 <p>&copy; {{ date('Y') }} Orbita Kenya. All rights reserved.</p>
                 
-                {{-- HIDDEN STAFF ACCESS --}}
                 <div class="my-4 md:my-0">
-                    <a href="{{ route('filament.admin.auth.login') }}" class="text-gray-600/30 hover:text-gray-500 transition-colors cursor-default hover:cursor-pointer">
+                    <a href="{{ route('filament.admin.auth.login') }}" class="text-gray-600/30 hover:text-orbita-gold/50 transition-colors cursor-default hover:cursor-pointer">
                         System Access
                     </a>
                 </div>
 
                 <div class="flex gap-8 mt-4 md:mt-0">
-                    <a href="#" class="hover:text-white transition">Privacy Policy</a>
-                    <a href="#" class="hover:text-white transition">Terms of Service</a>
+                    <a href="{{ route('policy.privacy') }}" class="hover:text-white transition">Privacy Policy</a>
+                    <a href="{{ route('policy.terms') }}" class="hover:text-white transition">Terms of Service</a>
                 </div>
             </div>
         </div>
     </footer>
 
-   {{-- Replace the messy end of your file with this clean version --}}
-    </footer>
-
-   </footer>
-
+    @livewireScripts
     {{-- Chat Widget Script --}}
     <script type="text/javascript">
         var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
         (function(){
             var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
             s1.async=true;
-            s1.src='https://embed.tawk.to/YOUR_UNIQUE_ID/default';
+            s1.src='https://embed.tawk.to/679f72c03bd1c46011a681cc/1ijk6fbe5';
             s1.charset='UTF-8';
             s1.setAttribute('crossorigin','*');
             s0.parentNode.insertBefore(s1,s0);
@@ -132,9 +133,3 @@
     </script>
 </body>
 </html>
-</body>
-</html>
-    </script>
-</body>
-</html>
-                

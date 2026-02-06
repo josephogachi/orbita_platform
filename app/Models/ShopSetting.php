@@ -27,6 +27,8 @@ class ShopSetting extends Model
         'bank_name',
         'account_name',
         'account_number',
+        'about_image_path',
+        'catalog_path',
     ];
 
     /**

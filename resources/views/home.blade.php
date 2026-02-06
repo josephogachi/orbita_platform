@@ -1,4 +1,15 @@
 @extends('layouts.public')
+@if(session('error'))
+    <div onclick="this.remove()" class="fixed top-10 right-4 z-50 bg-red-600 text-white px-6 py-4 rounded-xl shadow-2xl cursor-pointer animate-bounce">
+        <span class="font-bold">Error:</span> {{ session('error') }}
+    </div>
+@endif
+
+@if(session('info'))
+    <div onclick="this.remove()" class="fixed top-10 right-4 z-50 bg-blue-600 text-white px-6 py-4 rounded-xl shadow-2xl cursor-pointer">
+        <span class="font-bold">Notice:</span> {{ session('info') }}
+    </div>
+@endif
 
 @section('content')
 
@@ -63,34 +74,59 @@
                 @endforelse
             </div>
 
-            {{-- Side Ads - Stays hidden on small mobile screens to keep the landscape look clean --}}
-            <div class="hidden lg:block h-full">
-                @if($sideAds->count() > 0)
-                    <div x-data="{ current: 0, count: {{ $sideAds->count() }} }" 
-                         x-init="setInterval(() => { current = (current + 1) % count }, 5000)"
-                         class="relative rounded-[2.5rem] overflow-hidden shadow-card border border-white bg-white h-full flex flex-col group">
-                        
-                        @foreach($sideAds as $index => $ad)
-                            <div x-show="current === {{ $index }}"
-                                 x-transition:enter="transition ease-out duration-700"
-                                 class="absolute inset-0 w-full h-full flex flex-col p-8 items-center text-center bg-orbita-light justify-center">
-                                
-                                <div class="flex-1 flex items-center justify-center w-full">
-                                    @php $adImg = $ad->image_path ?? $ad->image; @endphp
-                                    <img src="{{ asset('storage/'.$adImg) }}" class="max-w-[180px] max-h-[220px] object-contain drop-shadow-2xl">
-                                </div>
+            {{-- Side Ads - Optimized for Full-Bleed Section Occupancy --}}
+<div class="hidden lg:block h-full min-h-full">
+    @if($sideAds->count() > 0)
+        <div x-data="{ current: 0, count: {{ $sideAds->count() }} }" 
+             x-init="setInterval(() => { current = (current + 1) % count }, 5000)"
+             class="relative rounded-[2.5rem] overflow-hidden shadow-2xl border border-white bg-gray-900 h-full w-full group">
+            
+            @foreach($sideAds as $index => $ad)
+                <div x-show="current === {{ $index }}"
+                     x-transition:enter="transition opacity duration-1000 ease-in-out"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition opacity duration-1000 ease-in-out"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     class="absolute inset-0 w-full h-full">
+                    
+                    {{-- 🟢 IMAGE: Set to absolute/inset-0 to occupy the entire parent container --}}
+                    @php $adImg = $ad->image_path ?? $ad->image; @endphp
+                    <img src="{{ asset('storage/'.$adImg) }}" 
+                         class="absolute inset-0 w-full h-full object-cover transition-transform duration-[3000ms] ease-out group-hover:scale-110"
+                         alt="{{ $ad->title }}">
 
-                                <div class="mt-6 w-full">
-                                    <h3 class="text-xl font-black text-orbita-blue uppercase mb-2">{{ $ad->title }}</h3>
-                                    <a href="{{ $ad->link_url ?? $ad->link ?? '#' }}" class="block w-full py-3 bg-orbita-blue text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orbita-gold transition shadow-lg">
-                                        {{ $ad->button_text ?? 'View Deal' }}
-                                    </a>
-                                </div>
-                            </div>
-                        @endforeach
+                    {{-- 🟢 OVERLAY: High-end cinematic gradient --}}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20"></div>
+
+                    {{-- 🟢 CONTENT: Anchored to the bottom for a clean look --}}
+                    <div class="absolute inset-x-0 bottom-0 p-10 z-10">
+                        <div class="transform translate-y-4 group-hover:translate-y-0 transition-all duration-700">
+                            <h3 class="text-2xl font-extrabold text-white uppercase mb-4 tracking-tighter drop-shadow-2xl">
+                                {{ $ad->title }}
+                            </h3>
+                            
+                            <a href="{{ $ad->link_url ?? $ad->link ?? '#' }}" 
+                               class="block w-full py-4 bg-orbita-gold text-white text-center rounded-2xl text-[11px] font-black uppercase tracking-[0.25em] hover:bg-white hover:text-black transition-all duration-300 shadow-2xl">
+                                {{ $ad->button_text ?? 'View Deal' }}
+                            </a>
+                        </div>
                     </div>
-                @endif
+                </div>
+            @endforeach
+
+            {{-- 🟢 PREMIUM INDICATORS --}}
+            <div class="absolute top-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+                @foreach($sideAds as $index => $ad)
+                    <button @click="current = {{ $index }}" 
+                            class="h-1.5 rounded-full transition-all duration-500"
+                            :class="current === {{ $index }} ? 'w-10 bg-orbita-gold' : 'w-3 bg-white/40'"></button>
+                @endforeach
             </div>
+        </div>
+    @endif
+</div>
         </div>
     </section>
 
@@ -326,11 +362,13 @@
                         </a>
 
                         {{-- Secondary CTA --}}
-                        <a href="#" class="w-max">
-                            <button class="px-10 md:px-14 py-4 md:py-6 bg-white/5 backdrop-blur-xl border border-white/10 text-white font-black uppercase tracking-widest text-[10px] md:text-xs rounded-full hover:bg-white hover:text-[#020617] transition-all duration-300">
-                                View Catalog
-                            </button>
-                        </a>
+                       <a href="{{ route('catalog.download') }}" 
+   class="inline-flex items-center gap-2 bg-orbita-gold text-white px-6 py-3 md:px-8 md:py-4 rounded-xl font-black uppercase tracking-widest hover:bg-orbita-blue transition-colors duration-300 shadow-xl text-xs md:text-sm">
+    <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+    <span>View Full Catalog</span>
+</a>
                     </div>
                 </div>
             </div>
@@ -450,20 +488,133 @@
         </div>
     </section>
 
-    {{-- 7. WELCOME MODAL --}}
-    <div x-data="{ show: true }" x-show="show" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center px-4 backdrop-blur-sm bg-orbita-blue/60">
-        <div class="bg-white rounded-[2rem] shadow-2xl max-w-md w-full p-2 relative overflow-hidden animate-float">
-            <button @click="show = false" class="absolute top-4 right-4 z-20 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition">×</button>
-            <div class="p-10 text-center bg-orbita-light rounded-[1.5rem] border border-gray-100">
-                <div class="w-16 h-16 bg-orbita-blue text-white rounded-2xl flex items-center justify-center text-2xl font-black mx-auto mb-6 shadow-glow">O</div>
-                <h2 class="text-2xl font-black text-orbita-blue uppercase mb-2">Welcome!</h2>
-                <p class="text-gray-500 text-sm mb-6">Join our exclusive list for hotel managers.</p>
-                <form class="space-y-3">
-                    <input type="email" placeholder="Work Email Address" class="w-full px-4 py-3 rounded-xl border-none bg-white shadow-sm focus:ring-2 focus:ring-orbita-gold text-sm text-center">
-                    <button class="w-full py-3 bg-orbita-blue text-white font-bold rounded-xl hover:bg-orbita-gold transition shadow-lg uppercase text-xs tracking-widest">Subscribe</button>
-                </form>
+   {{-- 7. WELCOME MODAL (Professional Elite Edition) --}}
+<div x-data="{ 
+        show: !localStorage.getItem('orbita_subscribed'),
+        init() {
+            // Delay appearance by 2 seconds for a better user experience
+            setTimeout(() => { 
+                if(!localStorage.getItem('orbita_subscribed')) this.show = true 
+            }, 2000);
+        },
+        closeModal() {
+            this.show = false;
+            localStorage.setItem('orbita_subscribed', 'true');
+        }
+     }" 
+     x-show="show" 
+     x-cloak 
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     class="fixed inset-0 z-[100] flex items-center justify-center px-4 backdrop-blur-md bg-orbita-blue/40"
+     style="display: none;">
+
+    <div class="bg-white rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] max-w-md w-full p-2 relative overflow-hidden border border-white/20">
+        
+        {{-- Gold Top Accent Line --}}
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-orbita-gold"></div>
+
+        {{-- Close Button --}}
+        <button @click="closeModal()" class="absolute top-5 right-5 z-20 w-8 h-8 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center hover:bg-orbita-blue hover:text-white transition-all duration-300">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+
+        <div class="p-8 md:p-12 text-center bg-gray-50/50 rounded-[2rem] border border-gray-100">
+            {{-- Professional Icon --}}
+            <div class="w-20 h-20 bg-orbita-blue text-orbita-gold rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-2xl rotate-3">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                </svg>
+            </div>
+
+            <h2 class="text-3xl font-black text-orbita-blue uppercase tracking-tighter mb-3">
+                Executive <span class="text-orbita-gold">Access</span>
+            </h2>
+            
+            <p class="text-gray-500 text-base mb-8 leading-relaxed">
+                Join our exclusive network of hospitality managers for priority updates and seasonal offers.
+            </p>
+
+            {{-- Form connected to your Subscriber Controller --}}
+            <form action="{{ route('subscribe.store') }}" method="POST" @submit="closeModal()" class="space-y-4">
+                @csrf
+                <div class="relative">
+                    <input type="email" name="email" required placeholder="Work Email Address" 
+                           class="w-full px-6 py-4 rounded-2xl border border-gray-200 bg-white shadow-sm focus:ring-2 focus:ring-orbita-gold focus:border-transparent outline-none text-gray-700 text-center transition-all">
+                </div>
+                
+                <button type="submit" 
+                        class="w-full py-4 bg-orbita-blue text-white font-black rounded-2xl hover:bg-orbita-gold hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-[0_10px_20px_rgba(2,18,86,0.2)] uppercase text-xs tracking-[0.2em]">
+                    Unlock Access
+                </button>
+            </form>
+
+            <p class="text-[10px] text-gray-400 mt-6 uppercase tracking-widest font-bold">
+                Orbita Kenya • Secure & Confidential
+            </p>
+        </div>
+    </div>
+</div>
+    {{-- 8. COOKIE CONSENT BANNER (Clean Professional) --}}
+<div x-data="{ 
+        show: !localStorage.getItem('orbita_cookies_accepted'),
+        accept() {
+            localStorage.setItem('orbita_cookies_accepted', 'true');
+            this.show = false;
+        }
+     }" 
+     x-show="show" 
+     x-cloak
+     x-transition:enter="transition ease-out duration-500"
+     x-transition:enter-start="translate-y-20 opacity-0"
+     x-transition:enter-end="translate-y-0 opacity-100"
+     class="fixed bottom-6 left-6 right-6 md:right-auto md:max-w-md z-[90]"
+     style="display: none;">
+
+    <div class="bg-orbita-blue rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 overflow-hidden">
+        
+        {{-- Decorative Gold Side Bar --}}
+        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-orbita-gold"></div>
+
+        <div class="p-6 md:p-8">
+            <div class="flex items-start gap-4 mb-6">
+                {{-- Cookie Icon --}}
+                <div class="p-2.5 bg-white/10 rounded-xl text-orbita-gold shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold text-lg uppercase tracking-wider">Cookie Policy</h3>
+                    <p class="text-gray-400 text-xs leading-relaxed mt-1">
+                        We use cookies to enhance your experience and analyze our traffic. By clicking "Accept", you consent to our use of cookies.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                {{-- Primary Accept Button --}}
+                <button @click="accept()" 
+                        class="flex-1 py-3 bg-orbita-gold text-orbita-blue font-black rounded-xl hover:bg-white transition-all duration-300 uppercase text-[10px] tracking-widest shadow-lg">
+                    Accept All
+                </button>
+                
+                {{-- Secondary Decline Button --}}
+                <button @click="show = false" 
+                        class="px-5 py-3 text-gray-400 hover:text-white font-bold uppercase text-[10px] tracking-widest transition-colors">
+                    Decline
+                </button>
+            </div>
+
+            {{-- Links --}}
+            <div class="mt-4 text-center">
+                <a href="{{ route('policy.privacy') }}" class="text-[9px] text-gray-500 uppercase tracking-widest hover:text-orbita-gold transition-colors underline decoration-gray-700">
+                    Read our Privacy Policy
+                </a>
             </div>
         </div>
     </div>
+</div>
 
 @endsection

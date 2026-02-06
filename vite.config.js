@@ -8,4 +8,12 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        host: '0.0.0.0', // 🟢 Allows access from external devices like your phone
+        hmr: {
+            host: 'localhost',
+        },
+        // If you still face issues with the popup, adding this allows the ngrok domain
+        allowedHosts: ['.ngrok-free.app'] 
+    },
 });

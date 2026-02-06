@@ -52,17 +52,6 @@ class ManageShopSettings extends Page implements HasForms
                             ->required()
                             ->label('Company Name'),
                         
-                        // 👇 CRITICAL UPDATE: Forces file to be public
-                        FileUpload::make('logo_path')
-                            ->label('Website Logo')
-                            ->image()
-                            ->disk('public')       // Stores in storage/app/public
-                            ->directory('settings')
-                            ->visibility('public') // Ensures browser can see it
-                            ->maxSize(5120)        // 5MB Limit
-                            ->preserveFilenames()
-                            ->columnSpanFull(),
-
                         Grid::make(2)->schema([
                             TextInput::make('phone_contact')
                                 ->label('Support Phone')
@@ -80,9 +69,63 @@ class ManageShopSettings extends Page implements HasForms
                         TextInput::make('office_address')
                             ->label('Corporate Office Address')
                             ->placeholder('Decale palace hotel 2nd floor 12st'),
-                    ])->columns(1),
+                    ]),
 
-                // 2. BANKING & TAX
+                // 2. COMPANY IMAGES & ASSETS
+                Section::make('Company Images')
+                    ->schema([
+                        Grid::make(2)->schema([
+                            // WEBSITE LOGO
+                            FileUpload::make('logo_path')
+                                ->label('Website Logo')
+                                ->image()
+                                ->disk('public')       // Stores in storage/app/public
+                                ->directory('settings')
+                                ->visibility('public') // Ensures browser can see it
+                                ->maxSize(5120)        // 5MB Limit
+                                ->preserveFilenames(),
+
+                            // ABOUT PAGE IMAGE
+                            FileUpload::make('about_image_path')
+                                ->label('About Page Feature Image')
+                                ->helperText('This large image appears on the "About Us" page.')
+                                ->image()
+                                ->imageEditor()        // Allows cropping
+                                ->disk('public')
+                                ->directory('company')
+                                ->visibility('public')
+                                ->maxSize(10240),      // 10MB Limit
+                        ]),
+                        
+                        // HERO AD BANNER
+                         FileUpload::make('hero_banner_path')
+                            ->label('Homepage Hero Ad Image')
+                            ->helperText('The large vertical image on the homepage sidebar.')
+                            ->image()
+                            ->disk('public')
+                            ->directory('banners')
+                            ->visibility('public')
+                            ->maxSize(10240)
+                            ->columnSpanFull(),
+                    ]),
+
+                // 3. DOCUMENTS & DOWNLOADS (NEW CATALOG SECTION)
+                Section::make('Documents & Downloads')
+                    ->description('Upload corporate files for client access')
+                    ->schema([
+                        FileUpload::make('catalog_path')
+                            ->label('Product Catalog (PDF)')
+                            ->helperText('Upload your latest brochure. Clients must sign in to download this.')
+                            ->directory('catalogs')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(20480) // 20MB Limit
+                            ->preserveFilenames()
+                            ->downloadable()
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible(),
+
+                // 4. BANKING & TAX
                 Section::make('Financials & Banking')
                     ->description('These details are used to generate your PDF invoices.')
                     ->schema([
@@ -109,7 +152,7 @@ class ManageShopSettings extends Page implements HasForms
                         ]),
                     ]),
 
-                // 3. HOMEPAGE COUNTDOWN & PROMOS
+                // 5. HOMEPAGE COUNTDOWN & PROMOS
                 Section::make('Homepage Promotions')
                     ->description('Control the visibility of the top-bar countdown timer.')
                     ->schema([
@@ -135,8 +178,7 @@ class ManageShopSettings extends Page implements HasForms
 
     public function save(): void
     {
-        // 👇 CRITICAL FIX: Use getState() instead of $this->data
-        // This processes the temporary file upload and returns the final path.
+        // 👇 CRITICAL: Use getState() to process uploads correctly
         $data = $this->form->getState();
 
         $settings = ShopSetting::first();

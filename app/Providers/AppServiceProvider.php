@@ -16,22 +16,31 @@ class AppServiceProvider extends ServiceProvider
     }
 
     public function boot(): void
-    {
-        // 1. Force HTTPS logic
-        if (config('app.env') !== 'local' || str_contains(request()->getHost(), 'ngrok-free.dev')) {
-            URL::forceScheme('https');
-        }
-
-        // 2. Shared settings logic (With Safety Wrap)
-        try {
-            if (Schema::hasTable('shop_settings')) {
-                $settings = ShopSetting::first();
-                View::share('settings', $settings);
-            }
-        } catch (\Exception $e) {
-            // If the database is missing or migrating, 
-            // we catch the error here so the page still loads.
-            View::share('settings', null);
-        }
+{
+    // 1. Improved Force HTTPS logic for ngrok and production
+    if (app()->environment('production') || str_contains(request()->header('host'), 'ngrok')) {
+        URL::forceScheme('https');
     }
+
+    // 2. Shared settings logic (Your existing code is solid)
+    try {
+        if (Schema::hasTable('shop_settings')) {
+            $settings = ShopSetting::first();
+            View::share('settings', $settings);
+
+            $rawPhone = $settings->phone_contact ?? '254726777733';
+            $cleanWhatsApp = preg_replace('/[^0-9]/', '', $rawPhone);
+            
+            if (str_starts_with($cleanWhatsApp, '0')) {
+                $cleanWhatsApp = '254' . substr($cleanWhatsApp, 1);
+            }
+
+            View::share('whatsappNumber', $cleanWhatsApp);
+            View::share('whatsappMessage', 'Hello, I am interested in your products.');
+        }
+    } catch (\Exception $e) {
+        View::share('settings', null);
+        View::share('whatsappNumber', '254726777733');
+    }
+}
 }

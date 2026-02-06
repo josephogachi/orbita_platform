@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
 {
-    Schema::create('shop_settings', function ($table) {
+    Schema::create('subscribers', function (Blueprint $table) {
         $table->id();
-        $table->string('name')->default('Orbita Kenya');
-        $table->string('email')->nullable();
+        $table->string('email')->unique();
+        $table->boolean('is_active')->default(true);
         $table->timestamps();
     });
 }
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('shop_settings');
+        Schema::dropIfExists('subscribers');
     }
 };
