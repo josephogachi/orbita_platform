@@ -15,6 +15,15 @@ class LowStockAlert extends BaseWidget
     // Set a heading for the widget
     protected static ?string $heading = 'Low Stock Alerts (Restock Needed)';
 
+    /**
+     * 🔒 PERMISSIONS: ONLY ADMIN
+     * Changing this to 'admin' only ensures it disappears for Sales Agents.
+     */
+    public static function canView(): bool
+    {
+        return auth()->user()->role === 'admin';
+    }
+
     public function table(Table $table): Table
     {
         return $table
@@ -29,11 +38,14 @@ class LowStockAlert extends BaseWidget
                 Tables\Columns\ImageColumn::make('images')
                     ->label('')
                     ->circular()
+                    ->stacked()
                     ->limit(1),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('Product')
-                    ->weight('bold'),
+                    ->weight('bold')
+                    ->searchable()
+                    ->limit(30),
 
                 Tables\Columns\TextColumn::make('stock_quantity')
                     ->label('Quantity Left')
@@ -47,15 +59,18 @@ class LowStockAlert extends BaseWidget
 
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('Category')
-                    ->badge(),
+                    ->badge()
+                    ->color('info')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([
-                // Quick link to edit the product and update stock
+                // Quick link to edit the product (Restocking)
                 Tables\Actions\Action::make('update_stock')
                     ->label('Restock')
                     ->url(fn (Product $record): string => "/admin/products/{$record->id}/edit")
                     ->icon('heroicon-m-plus-circle')
-                    ->color('success'),
-            ]);
+                    ->color('success'), 
+            ])
+            ->paginated(false); 
     }
 }

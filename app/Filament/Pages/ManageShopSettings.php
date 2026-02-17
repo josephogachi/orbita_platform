@@ -26,8 +26,20 @@ class ManageShopSettings extends Page implements HasForms
 
     public ?array $data = [];
 
+    /**
+     * 🔒 SECURITY: Only Admins can access or see this page in the sidebar.
+     * This hides "Shop Configuration" from Sales Agents.
+     */
+    public static function canAccess(): bool
+    {
+        return auth()->user()->role === 'admin';
+    }
+
     public function mount(): void
     {
+        // Double-check security (redundant but safe)
+        abort_unless(auth()->user()->role === 'admin', 403);
+
         // Fetch settings or create with expanded defaults
         $settings = ShopSetting::firstOrCreate([], [
             'shop_name' => 'Orbita Solutions',

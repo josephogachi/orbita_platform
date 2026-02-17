@@ -25,7 +25,7 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'google_id',
         'email_verified_at',
-        'role', // Supports: 'admin', 'seller', 'customer'
+        'role', // Supports: 'admin', 'sales_agent', 'user'
     ];
 
     /**
@@ -60,14 +60,14 @@ class User extends Authenticatable implements FilamentUser
         return $this->role === 'admin';
     }
 
-    public function isSeller(): bool
+    public function isSalesAgent(): bool
     {
-        return $this->role === 'seller';
+        return $this->role === 'sales_agent';
     }
 
-    public function isCustomer(): bool
+    public function isClient(): bool
     {
-        return $this->role === 'customer';
+        return $this->role === 'user';
     }
 
     /**
@@ -77,20 +77,25 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(Order::class);
     }
+    
+    public function projects(): HasMany
+    {
+        return $this->hasMany(ProjectLead::class);
+    }
 
     /**
      * Authorize access to Filament panels.
-     * Ensures only staff can access the backend via the "hidden" link.
+     * Ensures only Admins and Sales Agents can access the backend.
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        // Check access by Panel ID
+        // Check access by Panel ID (default is 'admin')
         if ($panel->getId() === 'admin') {
-            // Only 'admin' and 'seller' roles can enter the Filament backend
-            return in_array($this->role, ['admin', 'seller']);
+            // Only 'admin' and 'sales_agent' roles can enter the Filament backend
+            return in_array($this->role, ['admin', 'sales_agent']);
         }
 
-        // Add other panels here if you create separate ones (e.g., 'app' or 'portal')
-        return true;
+        // Default deny for safety, though usually unreachable if only one panel exists
+        return false;
     }
 }

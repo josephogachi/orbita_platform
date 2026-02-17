@@ -14,15 +14,26 @@ class SideAdResource extends Resource
 {
     protected static ?string $model = SideAd::class;
     
+    // Navigation Configuration
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-bar';
     protected static ?string $navigationGroup = 'Website Content';
     protected static ?string $navigationLabel = 'Hero Side Ads';
     protected static ?int $navigationSort = 2;
 
+    /**
+     * 🔒 SECURITY: HARD-CODE "ADMIN ONLY" ACCESS
+     * This ensures Sales Agents CANNOT see or access Hero Side Ads.
+     */
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->role === 'admin';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                // LEFT COLUMN: Text Content
                 Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make('Ad Content')
                         ->description('These ads appear in the vertical slider next to the main hero banner.')
@@ -52,31 +63,36 @@ class SideAdResource extends Resource
                                 Forms\Components\TextInput::make('link_url')
                                     ->label('Redirect URL')
                                     ->url()
-                                    ->placeholder('https://orbitakenya.com/category/deals'),
+                                    ->prefix('https://')
+                                    ->placeholder('orbitakenya.com/deals'),
                             ]),
                         ]),
                 ])->columnSpan(2),
 
+                // RIGHT COLUMN: Visuals & Status
                 Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make('Visuals & Logic')->schema([
                         Forms\Components\FileUpload::make('image_path')
                             ->label('Product Image')
                             ->image()
                             ->imageEditor()
+                            ->disk('public')
                             ->directory('ads')
+                            ->visibility('public') // Critical for public viewing
                             ->required()
                             ->helperText('Use transparent PNGs or portrait-oriented product shots.'),
 
                         Forms\Components\Toggle::make('is_active')
-                            ->label('Status')
-                            ->helperText('Visible on site')
+                            ->label('Live Status')
+                            ->helperText('Switch off to hide this ad temporarily.')
                             ->default(true)
                             ->onColor('success'),
                             
                         Forms\Components\TextInput::make('sort_order')
                             ->label('Sort Position')
                             ->numeric()
-                            ->default(0),
+                            ->default(0)
+                            ->helperText('Lower numbers appear first.'),
                     ]),
                 ])->columnSpan(1),
             ])->columns(3);
@@ -86,10 +102,12 @@ class SideAdResource extends Resource
     {
         return $table
             ->columns([
+                // IMAGE: Added grey background to make transparent PNGs visible
                 Tables\Columns\ImageColumn::make('image_path')
                     ->label('Thumbnail')
                     ->height(60)
-                    ->square(), // Removed invalid backgroundStyle method
+                    ->disk('public')
+                    ->extraAttributes(['style' => 'background-color: #f3f4f6; border-radius: 8px; padding: 4px; border: 1px solid #e5e7eb;']),
 
                 Tables\Columns\TextColumn::make('title')
                     ->label('Ad Heading')
@@ -111,7 +129,7 @@ class SideAdResource extends Resource
                     ->badge(),
             ])
             ->defaultSort('sort_order', 'asc')
-            ->reorderable('sort_order')
+            ->reorderable('sort_order') // Enable Drag & Drop sorting
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),

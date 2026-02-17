@@ -15,6 +15,15 @@ class TopProducts extends BaseWidget
     protected int | string | array $columnSpan = 'full';
 
     /**
+     * 🔒 SECURITY: Only Admins can see the Top Products (Revenue) widget.
+     * This ensures Sales Agents focus on their individual leads and projects.
+     */
+    public static function canView(): bool
+    {
+        return auth()->user()->role === 'admin';
+    }
+
+    /**
      * This method resolves the "Return value must be of type string, null returned" error.
      * Since the query uses groupBy, the standard 'id' is missing. 
      * We tell Filament to use 'product_id' as the unique key instead.
