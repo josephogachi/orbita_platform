@@ -24,6 +24,7 @@ class ProjectQuoteForm extends Component
     
     // Calculation Totals
     public $subtotal = 0, $shippingFee = 0, $installationTotal = 0, $grandTotal = 0, $depositRequired = 0;
+    public $totalUnits = 0; // Added this to track unit_count for the database
 
     public function mount($product_id = null)
     {
@@ -58,17 +59,17 @@ class ProjectQuoteForm extends Component
     public function calculateTotals()
     {
         $this->subtotal = 0;
-        $totalUnits = 0;
+        $this->totalUnits = 0; // Reset units before recounting
 
         foreach ($this->selectedItems as $item) {
             if ($item['product_id']) {
                 $this->subtotal += (float)$item['price'] * (int)$item['quantity'];
-                $totalUnits += (int)$item['quantity'];
+                $this->totalUnits += (int)$item['quantity'];
             }
         }
 
         // Installation: KES 1,500 per lock/unit
-        $this->installationTotal = $this->requires_installation ? ($totalUnits * 1500) : 0;
+        $this->installationTotal = $this->requires_installation ? ($this->totalUnits * 1500) : 0;
 
         // Shipping Rates
         $rates = ['nairobi' => 1000, 'coast' => 5000, 'rift' => 3500, 'others' => 7500];
@@ -90,21 +91,22 @@ class ProjectQuoteForm extends Component
 
         $imagePath = $this->door_image ? $this->door_image->store('quotes/doors', 'public') : null;
 
+        // 🎯 MAP THE LIVEWIRE VARIABLES TO THE CORRECT DATABASE COLUMNS
         ProjectQuote::create([
-            'user_id' => Auth::id(),
-            'hotel_name' => $this->hotel_name,
-            'property_type' => $this->property_type,
-            'mobile_number' => $this->mobile_number,
-            'location_type' => $this->location_type,
-            'exact_location' => $this->exact_location,
-            'selected_products' => $this->selectedItems, 
-            'project_stage' => $this->project_stage,
-            'door_type' => $this->door_type,
-            'door_image' => $imagePath,
-            'requires_installation' => $this->requires_installation,
-            'payment_plan' => $this->payment_plan,
-            'estimated_total' => $this->grandTotal,
-            'status' => 'pending',
+            'user_id'            => Auth::id(),
+            'hotel_name'         => $this->hotel_name,
+            'property_type'      => $this->property_type,
+            'phone_number'       => $this->mobile_number,         // Mapped to phone_number
+            'location_type'      => $this->location_type,
+            'exact_location'     => $this->exact_location,
+            'unit_count'         => $this->totalUnits > 0 ? $this->totalUnits : 1, // Required by DB
+            'door_type'          => $this->door_type,
+            'door_image'         => $imagePath,
+            'project_status'     => $this->project_stage ?? 'New',// Mapped to project_status
+            'wants_installation' => $this->requires_installation, // Mapped to wants_installation
+            'payment_plan'       => $this->payment_plan,
+            'estimated_total'    => $this->grandTotal,
+            'status'             => 'pending',
         ]);
 
         session()->flash('success', 'Quotation Request Received!');

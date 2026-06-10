@@ -16,12 +16,11 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * The attributes that are mass assignable.
-     *
-     * @var list<string>
      */
     protected $fillable = [
         'name',
         'email',
+        'phone', // 📱 Added: Required for M-Pesa reconciliation
         'password',
         'google_id',
         'email_verified_at',
@@ -30,8 +29,6 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
      */
     protected $hidden = [
         'password',
@@ -40,8 +37,6 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
      */
     protected function casts(): array
     {
@@ -53,7 +48,6 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Role Helper Methods
-     * These allow you to use if(auth()->user()->isAdmin()) in your controllers/views.
      */
     public function isAdmin(): bool
     {
@@ -71,11 +65,17 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * Relationships
+     * 🔗 RELATIONSHIPS
      */
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    // New CRM Relationship
+    public function leads(): HasMany
+    {
+        return $this->hasMany(Lead::class, 'user_id');
     }
     
     public function projects(): HasMany
@@ -85,17 +85,13 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Authorize access to Filament panels.
-     * Ensures only Admins and Sales Agents can access the backend.
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        // Check access by Panel ID (default is 'admin')
         if ($panel->getId() === 'admin') {
-            // Only 'admin' and 'sales_agent' roles can enter the Filament backend
             return in_array($this->role, ['admin', 'sales_agent']);
         }
 
-        // Default deny for safety, though usually unreachable if only one panel exists
         return false;
     }
 }

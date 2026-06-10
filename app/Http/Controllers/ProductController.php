@@ -63,13 +63,48 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
-        // 5. Return View with all variables for the masterpiece design
+        /**
+         * 5. DYNAMIC SEO ENGINE
+         * Generates exact Kenyan keywords and clean meta descriptions for Google
+         */
+        $seo_title = $product->name . ' | Best Smart Locks in Kenya | Orbita';
+        
+        // Parse the Markdown, strip HTML tags, and limit to Google's preferred 155 characters
+        $clean_description = strip_tags(Str::markdown($product->description ?? ''));
+        $seo_description = Str::limit($clean_description, 155);
+
+        /**
+         * 6. WAF-SAFE GOOGLE SCHEMA
+         * Built as a PHP array so the server firewall ignores it.
+         */
+        $schema = [
+            '@context'      => 'https://schema.org/',
+            '@type'         => 'Product',
+            'name'          => $product->name,
+            'image'         => asset('storage/' . ($product->images[0] ?? '')),
+            'description'   => $seo_description,
+            'sku'           => $product->sku,
+            'brand'         => ['@type' => 'Brand', 'name' => 'Orbita'],
+            'offers'        => [
+                '@type'         => 'Offer',
+                'url'           => request()->fullUrl(),
+                'priceCurrency' => 'KES',
+                'price'         => $product->price,
+                'availability'  => $product->stock_quantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                'itemCondition' => 'https://schema.org/NewCondition'
+            ]
+        ];
+
+        // 7. Return View with all variables for the masterpiece design
         return view('products.show', [
-            'product' => $product,
+            'product'         => $product,
             'relatedProducts' => $relatedProducts,
-            'settings' => $settings,
-            'whatsappNumber' => $whatsappNumber,
-            'whatsappMessage' => $whatsappMessage
+            'settings'        => $settings,
+            'whatsappNumber'  => $whatsappNumber,
+            'whatsappMessage' => $whatsappMessage,
+            'seo_title'       => $seo_title,       
+            'seo_description' => $seo_description, 
+            'schema'          => $schema           
         ]);
     }
 

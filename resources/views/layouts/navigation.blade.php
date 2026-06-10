@@ -15,11 +15,15 @@
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('home')" :active="request()->routeIs('home')">Home</x-nav-link>
                     
-                    {{-- ✅ ADDED: About Us Link --}}
+                    {{-- About Us Link --}}
                     <x-nav-link :href="route('about')" :active="request()->routeIs('about')">About Us</x-nav-link>
                     
                     <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">Products</x-nav-link>
                     <x-nav-link :href="route('work')" :active="request()->routeIs('work*')">Our Work</x-nav-link>
+                    
+                    {{-- ✅ ADDED: FAQ Link --}}
+                    <x-nav-link :href="route('faq')" :active="request()->routeIs('faq')">FAQ</x-nav-link>
+                    
                     <x-nav-link :href="route('contact')" :active="request()->routeIs('contact')">Contact</x-nav-link>
                 </div>
             </div>
@@ -91,11 +95,15 @@
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">Home</x-responsive-nav-link>
             
-            {{-- ✅ ADDED: Mobile About Us Link --}}
+            {{-- Mobile About Us Link --}}
             <x-responsive-nav-link :href="route('about')" :active="request()->routeIs('about')">About Us</x-responsive-nav-link>
             
             <x-responsive-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">Products</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('work')" :active="request()->routeIs('work*')">Our Work</x-responsive-nav-link>
+            
+            {{-- ✅ ADDED: Mobile FAQ Link --}}
+            <x-responsive-nav-link :href="route('faq')" :active="request()->routeIs('faq')">FAQ</x-responsive-nav-link>
+            
             <x-responsive-nav-link :href="route('contact')" :active="request()->routeIs('contact')">Contact</x-responsive-nav-link>
             
             @auth

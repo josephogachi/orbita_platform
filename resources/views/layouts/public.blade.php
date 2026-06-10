@@ -1,55 +1,141 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en-KE" class="scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Orbita Kenya | Smart Hospitality Solutions</title>
+    
+    {{-- 🎯 DYNAMIC SEO TAGS --}}
+    <title>{{ $seo_title ?? 'Orbita Kenya | Smart Hospitality Solutions' }}</title>
+    <meta name="description" content="{{ $seo_description ?? 'Leading supplier of premium smart door locks, hotel card locks, and access control systems in Nairobi, Kenya. Expert installation and lifetime support.' }}">
+    <meta name="keywords" content="smart locks kenya, digital door locks nairobi, hotel locks kenya, fingerprint locks, Orbita Kenya">
+    
+    {{-- 🎯 CANONICAL TAG --}}
+    <link rel="canonical" href="{{ url()->current() }}" />
+
+    {{-- 🎯 OPEN GRAPH --}}
+    <meta property="og:locale" content="en_KE">
+    <meta property="og:site_name" content="Orbita Kenya">
+    <meta property="og:title" content="{{ $seo_title ?? 'Orbita Kenya | Premium Smart Security' }}">
+    <meta property="og:description" content="{{ $seo_description ?? 'Premium Smart Locks and Hospitality Solutions in Kenya' }}">
+    <meta property="og:image" content="{{ isset($product) && isset($product->images[0]) ? asset('storage/'.$product->images[0]) : asset('images/default-orbita-share.jpg') }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:type" content="{{ isset($product) ? 'product' : 'website' }}">
+
+    {{-- 🎯 TWITTER CARDS --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $seo_title ?? 'Orbita Kenya | Premium Smart Security' }}">
+    <meta name="twitter:description" content="{{ $seo_description ?? 'Premium Smart Locks and Hospitality Solutions in Kenya' }}">
+    <meta name="twitter:image" content="{{ isset($product) && isset($product->images[0]) ? asset('storage/'.$product->images[0]) : asset('images/default-orbita-share.jpg') }}">
+
+    {{-- 🎯 LOCAL BUSINESS SCHEMA (Escaped @@ for Blade compatibility) --}}
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "LocalBusiness",
+      "name": "Orbita Kenya",
+      "image": "{{ asset('favicon.png') }}",
+      "@@id": "{{ url('/') }}",
+      "url": "{{ url('/') }}",
+      "telephone": "{{ $settings->phone_contact ?? '+254 726 777 733' }}",
+      "email": "{{ $settings->email_contact ?? 'info@orbitakenya.com' }}",
+      "address": {
+        "@@type": "PostalAddress",
+        "streetAddress": "Adlife Plaza, Ring Road Kilimani in Nairobi,",
+        "addressLocality": "Nairobi",
+        "addressRegion": "Nairobi County",
+        "postalCode": "00100",
+        "addressCountry": "KE"
+      },
+      "geo": {
+        "@@type": "GeoCoordinates",
+        "latitude": -1.2774,
+        "longitude": 36.8488
+      },
+      "openingHoursSpecification": {
+        "@@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+        ],
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      "sameAs": [
+        "{{ url('/') }}"
+      ],
+      "priceRange": "$$$"
+    }
+    </script>
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    {{-- INLINE CSS TO GUARANTEE SHIMMER & STYLES --}}
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         [x-cloak] { display: none !important; }
+
+        /* Top Bar Shimmer Animation */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .animate-shimmer {
+            background: linear-gradient(90deg, #dc2626, #f97316, #dc2626) !important;
+            background-size: 200% 100% !important;
+            animation: shimmer 4s linear infinite !important;
+        }
     </style>
+
     @livewireStyles
+    @stack('schema')
 </head>
 
 @php $settings = \App\Models\ShopSetting::first(); @endphp
 
 <body class="bg-orbita-light text-gray-900 antialiased flex flex-col min-h-screen">
 
-    {{-- 1. TOP BAR --}}
-    <div class="bg-orbita-blue text-white text-xs font-semibold relative overflow-hidden border-b border-white/10">
-        <div class="container mx-auto px-4 py-2 flex flex-col md:flex-row justify-between items-center gap-2 relative z-10">
-            <div class="flex items-center gap-4 text-white/80">
-                <span class="flex items-center gap-1 hover:text-orbita-gold transition cursor-pointer">
-                    <svg class="w-3 h-3 text-orbita-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> 
-                    {{ $settings->phone_contact ?? '+254 700 000 000' }}
-                </span>
-                <span class="hidden md:flex items-center gap-1 hover:text-orbita-gold transition cursor-pointer">
-                    <svg class="w-3 h-3 text-orbita-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    {{ $settings->email_contact ?? 'sales@orbita.co.ke' }}
-                </span>
-            </div>
-            
-            @if(isset($settings) && $settings->show_countdown && $settings->countdown_end)
-            <div x-data="countdown('{{ $settings->countdown_end }}')" class="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full">
-                <span class="text-orbita-gold font-black uppercase tracking-widest text-[10px]">{{ $settings->promo_banner_text ?? 'OFFER:' }}</span>
-                <div class="flex gap-1 font-mono text-white text-[10px]">
-                    <span x-text="days">00</span>d <span x-text="hours">00</span>h <span x-text="minutes">00</span>m
-                </div>
-            </div>
-            @endif
+   {{-- 1. HIGH-END E-COMMERCE TOP BAR --}}
+<div class="animate-shimmer text-white text-[10px] md:text-xs font-black relative overflow-hidden shadow-md">
+    <div class="container mx-auto px-4 py-2 flex flex-col md:flex-row justify-between items-center gap-3 relative z-10">
+        
+       {{-- Contact Info --}}
+<div class="flex items-center gap-6 text-white/90">
+    {{-- Phone --}}
+    <a href="tel:{{ $settings->phone_contact ?? '+254 700 000 000' }}" class="flex items-center gap-1.5 hover:scale-105 transition-transform">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+        <span>{{ $settings->phone_contact ?? '+254 700 000 000' }}</span>
+    </a>
 
-            <div class="flex items-center gap-4">
-                <div class="flex gap-2 text-white/80">
-                    <button class="hover:text-orbita-gold">EN</button>
-                    <span class="opacity-30">|</span>
-                    <button class="hover:text-orbita-gold">KES</button>
-                </div>
+    {{-- Email --}}
+    <a href="mailto:{{ $settings->email_contact ?? 'info@orbitakenya.com' }}" class="flex items-center gap-1.5 hover:scale-105 transition-transform">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        <span>{{ $settings->email_contact ?? 'info@orbitakenya.com' }}</span>
+    </a>
+</div>
+
+        {{-- Animated Promo/Countdown --}}
+        @if(isset($settings) && $settings->show_countdown && $settings->countdown_end)
+        <div x-data="flashSaleTimer('{{ $settings->countdown_end }}')" class="flex items-center gap-3 bg-black/20 px-4 py-1 rounded-full backdrop-blur-sm border border-white/10">
+            <span class="uppercase tracking-widest animate-pulse">{{ $settings->promo_banner_text ?? 'FLASH SALE ENDS IN:' }}</span>
+            <div class="flex gap-1.5 font-mono text-[11px]">
+                <span class="bg-white text-red-600 px-1.5 py-0.5 rounded shadow-inner" x-text="timeLeft.hours">00</span>:
+                <span class="bg-white text-red-600 px-1.5 py-0.5 rounded shadow-inner" x-text="timeLeft.minutes">00</span>:
+                <span class="bg-white text-red-600 px-1.5 py-0.5 rounded shadow-inner" x-text="timeLeft.seconds">00</span>
+            </div>
+        </div>
+        @endif
+
+        {{-- Locale Switcher --}}
+        <div class="flex items-center gap-4 text-white/90">
+            <div class="flex gap-2">
+                <button class="hover:text-white transition">EN</button>
+                <span class="opacity-30">|</span>
+                <button class="hover:text-white transition">KES</button>
             </div>
         </div>
     </div>
+</div>
 
     {{-- 2. NAVIGATION --}}
     @include('layouts.navigation')

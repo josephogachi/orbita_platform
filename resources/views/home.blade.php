@@ -1,4 +1,5 @@
 @extends('layouts.public')
+
 @if(session('error'))
     <div onclick="this.remove()" class="fixed top-10 right-4 z-50 bg-red-600 text-white px-6 py-4 rounded-xl shadow-2xl cursor-pointer animate-bounce">
         <span class="font-bold">Error:</span> {{ session('error') }}
@@ -13,124 +14,148 @@
 
 @section('content')
 
-    {{-- 1. HERO SECTION --}}
-    {{-- 1. HERO SECTION --}}
-    <section class="pt-4 lg:pt-6 pb-8 lg:pb-12 px-4 container mx-auto">
-        {{-- 
-           We remove the fixed height on mobile and use 'h-auto'.
-           On desktop, we keep the lg:h-[680px].
-        --}}
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-auto lg:h-[680px]">
+{{-- ==========================================
+     HERO E-COMMERCE GRID (Final Layout)
+     ========================================== --}}
+<section class="pt-4 pb-8 lg:pb-12 px-4 container mx-auto">
+    
+    {{-- Main Grid: Using ONLY pre-compiled heights to prevent collapsing on live server --}}
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[350px] md:h-[400px] lg:h-[480px]">
+        
+        {{-- 1. LEFT COLUMN: CATEGORIES (Brand Adjusted - Hidden on Mobile) --}}
+        <div class="hidden lg:flex flex-col lg:col-span-1 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden h-full">
+            {{-- Header --}}
+            <div class="bg-orbita-blue text-white px-5 py-4 font-black uppercase tracking-widest text-xs flex items-center gap-2 shadow-md z-10" 
+                 style="background-color: #021256 !important;">
+                <svg class="w-5 h-5 text-orbita-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+                All Departments
+            </div>
             
-            {{-- 
-               MOBILE FIX: 
-               1. 'aspect-[16/9]' forces it to be a landscape rectangle on phones.
-               2. 'h-auto' allows it to define its own height based on that aspect ratio.
-            --}}
-            <div x-data="{ active: 0, total: {{ $promotions->count() }} }" 
-                 x-init="setInterval(() => { active = (active + 1) % total }, 6000)"
-                 class="lg:col-span-3 relative rounded-[1.5rem] lg:rounded-[2.5rem] overflow-hidden shadow-2xl group border-2 lg:border-4 border-white bg-gray-900 aspect-[16/9] md:aspect-video lg:aspect-auto lg:h-full w-full">
-                
-                @forelse($promotions as $index => $promo)
-                    <div x-show="active === {{ $index }}"
-                         x-transition:enter="transition transform duration-1000"
-                         x-transition:enter-start="opacity-0 scale-105"
-                         x-transition:enter-end="opacity-100 scale-100"
-                         class="absolute inset-0 w-full h-full">
-                        
-                        {{-- Content --}}
-                        @if($promo->type === 'video')
-                            <video class="w-full h-full object-cover" autoplay muted loop playsinline>
-                                <source src="{{ asset('storage/'.$promo->file_path) }}" type="video/mp4">
-                            </video>
-                        @else
-                            @php $img = $promo->file_path ?? $promo->image; @endphp
-                            <img src="{{ asset('storage/'.$img) }}" class="w-full h-full object-cover object-center">
-                        @endif
+            {{-- Category List --}}
+            <ul class="flex-1 overflow-y-auto py-2 bg-orbita-blue" style="background-color: #021256 !important;">
+                @if(isset($categories) && $categories->count() > 0)
+                    @foreach($categories->take(7) as $category)
+                    <li>
+                        <a href="{{ route('products.index', ['category' => $category->slug ?? $category->id]) }}" 
+                           class="flex items-center justify-between px-5 py-3 text-sm font-semibold text-gray-300 hover:text-white hover:bg-white/10 border-b border-white/5 transition-all duration-300 group">
+                            <span class="group-hover:translate-x-1 transition-transform truncate pr-2 group-hover:text-orbita-gold">{{ $category->name }}</span>
+                            <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-orbita-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                    </li>
+                    @endforeach
+                    
+                    {{-- Other Categories Link --}}
+                    @if($categories->count() > 7)
+                    <li>
+                        <a href="{{ route('products.index') }}" 
+                           class="flex items-center justify-between px-5 py-3 text-sm font-black text-orbita-gold hover:text-white hover:bg-white/10 transition-colors">
+                            <span>Other Categories</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                    </li>
+                    @endif
+                @else
+                    <li class="px-5 py-3 text-sm text-gray-400">No categories found.</li>
+                @endif
+            </ul>
+        </div>
 
-                        <div class="absolute inset-0 bg-gradient-to-r from-orbita-blue/90 via-orbita-blue/30 to-transparent"></div>
-                        
-                        {{-- Text Container --}}
-                        <div class="absolute inset-0 flex items-center px-6 md:px-20">
-                            <div class="max-w-xl text-white space-y-2 md:space-y-6">
-                                <span class="bg-orbita-gold text-white px-2 py-0.5 md:px-4 md:py-1.5 rounded-full text-[7px] md:text-[10px] font-black uppercase tracking-[0.2em] shadow-glow inline-block">
-                                    Official Partner
-                                </span>
-                                
-                                <h1 class="text-xl md:text-7xl font-black leading-tight uppercase drop-shadow-lg shadow-black">
-                                    {{ $promo->title }}
-                                </h1>
+        {{-- 2. CENTER COLUMN: MAIN SLIDER (Visible on all devices) --}}
+        <div class="lg:col-span-2 relative rounded-xl overflow-hidden shadow-lg border border-gray-100 bg-white h-full w-full">
+            @if(isset($promotions) && $promotions->count() > 0)
+                <div x-data="{ active: 0, total: {{ $promotions->count() }} }" 
+                     x-init="setInterval(() => { active = (active + 1) % total }, 6000)"
+                     class="w-full h-full relative">
+                    
+                    @foreach($promotions as $index => $promo)
+                        <div x-show="active === {{ $index }}"
+                             x-cloak
+                             class="absolute inset-0 w-full h-full flex items-center justify-center bg-white"
+                             style="{{ $index === 0 ? 'display:flex;' : 'display:none;' }}">
+                            
+                            @php $cleanFile = str_replace('public/', '', $promo->file_path ?? $promo->image); @endphp
 
-                                <a href="{{ $promo->link_url ?? $promo->link ?? '#' }}" class="inline-block bg-white text-orbita-blue px-4 py-1.5 md:px-10 md:py-4 rounded-full font-bold text-[9px] md:text-xs uppercase tracking-widest hover:bg-orbita-gold hover:text-white transition shadow-xl">
-                                    {{ $promo->button_text ?? 'Explore Now' }}
-                                </a>
+                            @if($promo->type === 'video')
+                                <video class="w-full h-full object-contain" autoplay muted loop playsinline>
+                                    <source src="{{ asset('storage/' . $cleanFile) }}" type="video/mp4">
+                                </video>
+                            @else
+                                {{-- Hardcoded to object-contain so 1920x1080 images fit perfectly without cropping --}}
+                                <img src="{{ asset('storage/' . $cleanFile) }}" 
+                                     class="w-full h-full object-contain" 
+                                     alt="{{ $promo->title }}"
+                                     onerror="this.src='https://placehold.co/1920x1080/0f172a/ffffff?text=Image+Missing'">
+                            @endif
+
+                            {{-- Text Overlay --}}
+                            <div class="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex flex-col justify-center px-8 md:px-12 pointer-events-none">
+                                <div class="max-w-md pointer-events-auto">
+                                    <h1 class="text-3xl md:text-5xl font-black leading-tight uppercase text-white drop-shadow-lg">
+                                        {{ $promo->title }}
+                                    </h1>
+                                    <a href="{{ $promo->link_url ?? '#' }}" class="inline-block bg-orbita-gold text-white px-6 py-2.5 md:px-8 md:py-3 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors shadow-xl mt-4 md:mt-6">
+                                        {{ $promo->button_text ?? 'Explore' }}
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                @empty
-                    <div class="absolute inset-0 flex items-center justify-center text-white bg-orbita-blue">
-                        <p class="font-bold text-xs">Upload Banners in Admin</p>
-                    </div>
-                @endforelse
-            </div>
-
-            {{-- Side Ads - Optimized for Full-Bleed Section Occupancy --}}
-<div class="hidden lg:block h-full min-h-full">
-    @if($sideAds->count() > 0)
-        <div x-data="{ current: 0, count: {{ $sideAds->count() }} }" 
-             x-init="setInterval(() => { current = (current + 1) % count }, 5000)"
-             class="relative rounded-[2.5rem] overflow-hidden shadow-2xl border border-white bg-gray-900 h-full w-full group">
-            
-            @foreach($sideAds as $index => $ad)
-                <div x-show="current === {{ $index }}"
-                     x-transition:enter="transition opacity duration-1000 ease-in-out"
-                     x-transition:enter-start="opacity-0"
-                     x-transition:enter-end="opacity-100"
-                     x-transition:leave="transition opacity duration-1000 ease-in-out"
-                     x-transition:leave-start="opacity-100"
-                     x-transition:leave-end="opacity-0"
-                     class="absolute inset-0 w-full h-full">
-                    
-                    {{-- 🟢 IMAGE: Set to absolute/inset-0 to occupy the entire parent container --}}
-                    @php $adImg = $ad->image_path ?? $ad->image; @endphp
-                    <img src="{{ asset('storage/'.$adImg) }}" 
-                         class="absolute inset-0 w-full h-full object-cover transition-transform duration-[3000ms] ease-out group-hover:scale-110"
-                         alt="{{ $ad->title }}">
-
-                    {{-- 🟢 OVERLAY: High-end cinematic gradient --}}
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20"></div>
-
-                    {{-- 🟢 CONTENT: Anchored to the bottom for a clean look --}}
-                    <div class="absolute inset-x-0 bottom-0 p-10 z-10">
-                        <div class="transform translate-y-4 group-hover:translate-y-0 transition-all duration-700">
-                            <h3 class="text-2xl font-extrabold text-white uppercase mb-4 tracking-tighter drop-shadow-2xl">
-                                {{ $ad->title }}
-                            </h3>
-                            
-                            <a href="{{ $ad->link_url ?? $ad->link ?? '#' }}" 
-                               class="block w-full py-4 bg-orbita-gold text-white text-center rounded-2xl text-[11px] font-black uppercase tracking-[0.25em] hover:bg-white hover:text-black transition-all duration-300 shadow-2xl">
-                                {{ $ad->button_text ?? 'View Deal' }}
-                            </a>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
-            @endforeach
+            @else
+                <div class="absolute inset-0 flex items-center justify-center text-gray-500 bg-gray-100">No Promotions</div>
+            @endif
+        </div>
 
-            {{-- 🟢 PREMIUM INDICATORS --}}
-            <div class="absolute top-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
-                @foreach($sideAds as $index => $ad)
-                    <button @click="current = {{ $index }}" 
-                            class="h-1.5 rounded-full transition-all duration-500"
-                            :class="current === {{ $index }} ? 'w-10 bg-orbita-gold' : 'w-3 bg-white/40'"></button>
+        {{-- 3. RIGHT COLUMN: 3 PROMO ADS (Hidden on Mobile/Tablet) --}}
+        <div class="hidden lg:flex flex-col lg:col-span-1 gap-4 h-full">
+            @if(isset($sideAds) && $sideAds->count() > 0)
+                @foreach($sideAds->take(3) as $ad)
+                    @php 
+                        $cleanPath = str_replace(['public/', 'storage/'], '', $ad->image_path ?? $ad->image ?? ''); 
+                    @endphp
+                    <a href="{{ $ad->link_url ?? '#' }}" class="flex-1 relative rounded-xl overflow-hidden shadow-md bg-gray-200 block h-full w-full group">
+                        <img src="{{ asset('storage/' . ltrim($cleanPath, '/')) }}" 
+                             class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                             alt="{{ $ad->title ?? 'Ad' }}"
+                             onerror="this.src='https://placehold.co/400x400/e5e7eb/9ca3af?text=Image+Error'">
+                        
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-4 pointer-events-none">
+                            @if(!empty($ad->badge_text))
+                                <span class="inline-block text-[9px] font-bold bg-orbita-gold text-gray-900 px-2 py-0.5 rounded-sm uppercase tracking-widest mb-1 shadow w-max">{{ $ad->badge_text }}</span>
+                            @endif
+                            @if(!empty($ad->title))
+                                <h3 class="text-white font-black text-sm uppercase leading-tight drop-shadow-md">{{ $ad->title }}</h3>
+                            @endif
+                        </div>
+                    </a>
                 @endforeach
-            </div>
+                
+                {{-- Fill empty slots --}}
+                @for($i = $sideAds->count(); $i < 3; $i++)
+                    <div class="flex-1 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center h-full w-full">
+                        <span class="text-gray-300 font-bold uppercase text-xs">Ad Slot</span>
+                    </div>
+                @endfor
+            @else
+                {{-- If no database entries --}}
+                @for($i = 0; $i < 3; $i++)
+                    <div class="flex-1 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center h-full w-full">
+                        <span class="text-gray-300 font-bold uppercase text-xs">Ad Slot {{ $i + 1 }}</span>
+                    </div>
+                @endfor
+            @endif
         </div>
-    @endif
-</div>
-        </div>
-    </section>
+        
+    </div>
+</section>
 
-    {{-- 2. CLIENTS MARQUEE --}}
+    {{-- 2. CLIENTS MARQUEE (SEO ENHANCED) --}}
     <section class="py-28 relative bg-white overflow-hidden border-b border-gray-100">
         <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
             <div class="absolute -top-24 -left-24 w-96 h-96 bg-gray-100 rounded-full blur-3xl opacity-60"></div>
@@ -139,13 +164,13 @@
 
         <div class="container mx-auto px-4 relative z-10 text-center mb-24">
             <span class="text-orbita-gold font-bold uppercase tracking-[0.3em] text-sm mb-4 block animate-pulse-slow">
-                Our Ecosystem
+                Top Hospitality Partners
             </span>
             <h2 class="text-5xl md:text-7xl font-black text-orbita-blue mb-8 tracking-tighter leading-tight">
-                Trusted by <br class="hidden md:block"> Industry Leaders
+                Trusted by Leading <br class="hidden md:block"> Hotels in Kenya
             </h2>
             <p class="text-gray-500 max-w-3xl mx-auto text-xl leading-relaxed font-medium">
-                We are proud to secure and empower the most prestigious hospitality brands across Kenya and East Africa with our smart technology.
+                We are proud to supply and install premium wholesale hotel smart locks, minibars, and hospitality room accessories for the most prestigious resorts across Nairobi, Mombasa, and East Africa.
             </p>
         </div>
 
@@ -159,7 +184,7 @@
                         <div class="flex-shrink-0 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-105 cursor-pointer px-4">
                             <img src="{{ asset('storage/'.$client->logo_path) }}" 
                                  class="h-20 md:h-28 w-auto max-w-[200px] md:max-w-[350px] object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition duration-500"
-                                 alt="Client Logo">
+                                 alt="Orbita Kenya Hotel Client - {{ $client->name ?? 'Partner' }}">
                         </div>
                     @endforeach
                 @endfor
@@ -201,7 +226,7 @@
         next() { this.$refs.slider.scrollBy({ left: 400, behavior: 'smooth' }) }
     }">
         {{-- Section Header --}}
-        <div class="bg-orbita-blue rounded-t-[2.5rem] p-5 md:px-10 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-white/10 shadow-lg">
+        <div class="bg-orbita-blue rounded-t-[2.0rem] p-5 md:px-10 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-white/10 shadow-lg">
             <div class="flex items-center gap-4">
                 <div class="bg-orbita-gold p-2 rounded-xl shadow-glow">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,7 +262,7 @@
                 </div>
 
                 <a href="{{ route('products.index') }}" class="bg-white/10 hover:bg-orbita-gold text-white px-5 py-2.5 rounded-full font-bold text-[10px] uppercase tracking-widest transition-all border border-white/20 flex items-center gap-2">
-                    View All
+                    View Catalog
                 </a>
             </div>
         </div>
@@ -257,6 +282,7 @@
                     <div class="h-56 flex items-center justify-center mb-6 relative overflow-hidden rounded-[2rem] bg-orbita-light border border-transparent group-hover:border-orbita-gold/20 transition-all duration-500 shadow-inner">
                         @if($product->images && count($product->images) > 0)
                             <img src="{{ asset('storage/' . $product->images[0]) }}" 
+                                 alt="{{ $product->name }} - Hospitality Hardware Kenya"
                                  class="max-h-40 w-auto object-contain mix-blend-multiply group-hover:scale-110 transition duration-700 p-4">
                         @else
                             <div class="text-gray-300 text-[10px] font-bold uppercase tracking-widest">No Image</div>
@@ -314,20 +340,15 @@
     @endif
 @endforeach
 
-   {{-- 4. COLLABORATE CTA - FORCED DARK BACKGROUND --}}
+   {{-- 4. COLLABORATE CTA - FORCED DARK BACKGROUND (LOCALIZED) --}}
     <section class="py-24 container mx-auto px-4">
-        {{-- Added 'important' inline style to prevent layout overrides --}}
         <div class="relative rounded-[3rem] md:rounded-[4.5rem] overflow-hidden shadow-2xl border border-white/10" 
              style="background-color: #021256 !important;">
             
             {{-- Creative Abstract Layers --}}
             <div class="absolute inset-0 z-0 pointer-events-none">
-                {{-- Deep Blue Glow --}}
                 <div class="absolute top-[-10%] right-[-5%] w-[60%] h-[80%] bg-orbita-blue/20 rounded-full blur-[120px]"></div>
-                {{-- Subtle Gold Accent Glow --}}
                 <div class="absolute bottom-[-10%] left-[-5%] w-[40%] h-[60%] bg-orbita-gold/10 rounded-full blur-[100px]"></div>
-                
-                {{-- Classy Tech Grid Overlay --}}
                 <div class="absolute inset-0 opacity-[0.1]" 
                      style="background-image: radial-gradient(circle, #d8aa3f 1px, transparent 1px); background-size: 40px 40px;">
                 </div>
@@ -338,7 +359,7 @@
                 <div class="max-w-4xl mx-auto">
                     
                     <span class="inline-block px-5 py-1.5 mb-10 border border-orbita-gold/30 bg-orbita-gold/5 text-orbita-gold text-[9px] md:text-xs font-black uppercase tracking-[0.5em] rounded-full">
-                        Premium Hotel Security
+                        Premium Hotel Security Suppliers in Kenya
                     </span>
 
                     {{-- High-Contrast Heading --}}
@@ -349,26 +370,24 @@
                     </h2>
 
                     <p class="text-gray-400 text-sm md:text-xl font-medium max-w-2xl mx-auto mb-14 leading-relaxed">
-                        Join the elite hospitality brands across East Africa leveraging Orbita's intelligent security and world-class hardware.
+                        Join the elite hotels and resorts across Nairobi, Mombasa, and East Africa leveraging Orbita's wholesale RFID smart locks, silent minibars, and world-class installation services.
                     </p>
 
                     {{-- Button Group: Classy & Compact --}}
                     <div class="flex flex-wrap justify-center items-center gap-6">
-                        {{-- Primary CTA --}}
                         <a href="{{ route('contact') }}" class="w-max">
                             <button class="px-10 md:px-14 py-4 md:py-6 bg-orbita-gold text-white font-black uppercase tracking-widest text-[10px] md:text-xs rounded-full hover:scale-105 transition-all duration-300 shadow-2xl shadow-orbita-gold/30">
                                 Get a Quote
                             </button>
                         </a>
 
-                        {{-- Secondary CTA --}}
                        <a href="{{ route('catalog.download') }}" 
-   class="inline-flex items-center gap-2 bg-orbita-gold text-white px-6 py-3 md:px-8 md:py-4 rounded-xl font-black uppercase tracking-widest hover:bg-orbita-blue transition-colors duration-300 shadow-xl text-xs md:text-sm">
-    <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
-    <span>View Full Catalog</span>
-</a>
+                           class="inline-flex items-center gap-2 bg-orbita-gold text-white px-6 py-3 md:px-8 md:py-4 rounded-xl font-black uppercase tracking-widest hover:bg-orbita-blue transition-colors duration-300 shadow-xl text-xs md:text-sm">
+                            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span>View Full Catalog</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -380,70 +399,54 @@
         </div>
     </section>
 
-{{-- 5. PARTNER CTA - LUXURY METALLIC EDITION --}}
-    <section class="pb-24 container mx-auto px-4">
-        <div class="relative rounded-[3rem] overflow-hidden shadow-2xl border border-orbita-gold/20" 
-             style="background: linear-gradient(135deg, #C5A059 0%, #D4AF37 50%, #B8860B 100%) !important;">
+{{-- 5. PARTNER CTA - SLIM MINIMAL BANNER (SEO ENHANCED) --}}
+    <section class="pb-16 container mx-auto px-4">
+        <div class="bg-white rounded-[1.5rem] shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 flex flex-col md:flex-row items-center justify-between p-6 md:px-10 md:py-8 gap-6 relative overflow-hidden">
             
-            {{-- Abstract Geometric Pattern Overlay --}}
-            <div class="absolute inset-0 opacity-10 pointer-events-none" 
-                 style="background-image: url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"1\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');">
-            </div>
+            {{-- Minimal Gold Accent Line --}}
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-orbita-gold"></div>
 
-            {{-- Glassmorphism Glows --}}
-            <div class="absolute top-0 left-0 w-full h-full">
-                <div class="absolute -top-24 -left-24 w-96 h-96 bg-white/20 rounded-full blur-[100px]"></div>
-                <div class="absolute bottom-0 right-0 w-64 h-64 bg-black/10 rounded-full blur-[80px]"></div>
-            </div>
-
-            <div class="relative z-10 p-10 md:p-20 flex flex-col md:flex-row items-center justify-between gap-12">
+            {{-- Icon & Text Content --}}
+            <div class="flex items-center gap-5 md:gap-6 flex-1 w-full pl-2">
                 
-                <div class="text-center md:text-left text-white max-w-2xl">
-                    {{-- Small Badge --}}
-                    <div class="inline-flex items-center gap-2 px-3 py-1 mb-6 bg-black/10 rounded-full border border-white/20">
-                        <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                        <span class="text-[9px] font-black uppercase tracking-widest">Authorized Reseller Program</span>
-                    </div>
+                {{-- Subtle Icon --}}
+                <div class="hidden sm:flex shrink-0 w-12 h-12 bg-orbita-blue/5 text-orbita-blue rounded-full items-center justify-center border border-orbita-blue/10">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                </div>
 
-                    <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-6 leading-none">
-                        Partner <br class="hidden md:block"> With <span class="text-black/40">Orbita.</span>
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-orbita-gold bg-orbita-gold/10 px-2 py-0.5 rounded-sm">
+                            B2B Reseller Program
+                        </span>
+                    </div>
+                    <h2 class="text-lg md:text-xl font-black text-orbita-blue uppercase tracking-tight leading-tight">
+                        Become an Official Orbita Kenya Partner
                     </h2>
-                    
-                    <p class="text-sm md:text-lg font-bold text-white/90 max-w-md leading-relaxed">
-                        Scale your business by becoming a certified reseller. Access exclusive wholesale pricing and priority technical support.
+                    <p class="text-gray-500 text-[11px] md:text-xs mt-1 max-w-2xl">
+                        Access exclusive wholesale pricing on <strong>hotel smart locks, room safes, and minibars</strong>. Join our trusted network of certified hospitality suppliers across East Africa.
                     </p>
                 </div>
-
-                {{-- CTA Button --}}
-                <div class="relative w-max">
-                    <a href="{{ route('contact') }}" class="group block">
-                        {{-- Button Shadow Glow --}}
-                        <div class="absolute -inset-1 bg-black/20 rounded-full blur-xl group-hover:bg-white/20 transition duration-500"></div>
-                        
-                        <button class="relative bg-orbita-blue text-white px-10 md:px-14 py-5 rounded-full font-black uppercase tracking-[0.2em] text-[10px] md:text-xs hover:bg-white hover:text-orbita-blue transition-all duration-300 shadow-2xl flex items-center gap-3">
-                            Join the Network
-                            <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin=\"round\" stroke-width=\"3\" d=\"M13 7l5 5m0 0l-5 5m5-5H6\"/></svg>
-                        </button>
-                    </a>
-                </div>
-
             </div>
 
-            {{-- Subtle Bottom Text Decor --}}
-            <div class="absolute -bottom-4 left-10 opacity-[0.05] pointer-events-none select-none">
-                <h3 class="text-8xl font-black text-white italic">PARTNERSHIP</h3>
+            {{-- CTA Button --}}
+            <div class="shrink-0 w-full md:w-auto mt-2 md:mt-0">
+                <a href="{{ route('partnership') }}" class="block text-center md:inline-block px-8 py-3.5 bg-orbita-blue text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-orbita-gold transition-colors shadow-lg shadow-orbita-blue/10 w-full md:w-auto">
+                    Apply Now
+                </a>
             </div>
+
         </div>
     </section>
 
-    {{-- 6. TESTIMONIALS --}}
+    {{-- 6. TESTIMONIALS (SEO ENHANCED) --}}
     <section class="py-28 relative bg-white overflow-hidden">
         <div class="absolute top-0 right-0 w-96 h-96 bg-gray-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         
         <div class="container mx-auto px-4 relative z-10">
             <div class="text-center mb-20">
-                <span class="text-orbita-gold font-bold uppercase tracking-[0.3em] text-xs mb-4 block">Success Stories</span>
-                <h2 class="text-4xl md:text-6xl font-black text-orbita-blue tracking-tighter">What Our Partners Say</h2>
+                <span class="text-orbita-gold font-bold uppercase tracking-[0.3em] text-xs mb-4 block">Local Success Stories</span>
+                <h2 class="text-4xl md:text-6xl font-black text-orbita-blue tracking-tighter">What Kenyan Hoteliers Say</h2>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -466,7 +469,7 @@
                         <div class="flex items-center gap-4">
                             <div class="w-14 h-14 rounded-full overflow-hidden bg-gray-200 border-2 border-white shadow-sm">
                                 @if($testimonial->image_path)
-                                    <img src="{{ asset('storage/' . $testimonial->image_path) }}" class="w-full h-full object-cover" alt="{{ $testimonial->client_name }}">
+                                    <img src="{{ asset('storage/' . $testimonial->image_path) }}" class="w-full h-full object-cover" alt="Hotel Client {{ $testimonial->client_name }} - Orbita Kenya">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center bg-orbita-blue text-white font-bold">
                                         {{ substr($testimonial->client_name, 0, 1) }}
@@ -492,7 +495,6 @@
 <div x-data="{ 
         show: !localStorage.getItem('orbita_subscribed'),
         init() {
-            // Delay appearance by 2 seconds for a better user experience
             setTimeout(() => { 
                 if(!localStorage.getItem('orbita_subscribed')) this.show = true 
             }, 2000);
@@ -512,16 +514,13 @@
 
     <div class="bg-white rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] max-w-md w-full p-2 relative overflow-hidden border border-white/20">
         
-        {{-- Gold Top Accent Line --}}
         <div class="absolute top-0 left-0 w-full h-1.5 bg-orbita-gold"></div>
 
-        {{-- Close Button --}}
         <button @click="closeModal()" class="absolute top-5 right-5 z-20 w-8 h-8 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center hover:bg-orbita-blue hover:text-white transition-all duration-300">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
 
         <div class="p-8 md:p-12 text-center bg-gray-50/50 rounded-[2rem] border border-gray-100">
-            {{-- Professional Icon --}}
             <div class="w-20 h-20 bg-orbita-blue text-orbita-gold rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-2xl rotate-3">
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
@@ -533,10 +532,9 @@
             </h2>
             
             <p class="text-gray-500 text-base mb-8 leading-relaxed">
-                Join our exclusive network of hospitality managers for priority updates and seasonal offers.
+                Join our exclusive network of Kenyan hospitality managers for priority updates on hotel locks, minibars, and seasonal wholesale offers.
             </p>
 
-            {{-- Form connected to your Subscriber Controller --}}
             <form action="{{ route('subscribe.store') }}" method="POST" @submit="closeModal()" class="space-y-4">
                 @csrf
                 <div class="relative">
@@ -551,11 +549,12 @@
             </form>
 
             <p class="text-[10px] text-gray-400 mt-6 uppercase tracking-widest font-bold">
-                Orbita Kenya • Secure & Confidential
+                Orbita Kenya � Secure & Confidential
             </p>
         </div>
     </div>
 </div>
+
     {{-- 8. COOKIE CONSENT BANNER (Clean Professional) --}}
 <div x-data="{ 
         show: !localStorage.getItem('orbita_cookies_accepted'),
@@ -574,12 +573,10 @@
 
     <div class="bg-orbita-blue rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 overflow-hidden">
         
-        {{-- Decorative Gold Side Bar --}}
         <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-orbita-gold"></div>
 
         <div class="p-6 md:p-8">
             <div class="flex items-start gap-4 mb-6">
-                {{-- Cookie Icon --}}
                 <div class="p-2.5 bg-white/10 rounded-xl text-orbita-gold shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
@@ -594,20 +591,17 @@
             </div>
 
             <div class="flex items-center gap-3">
-                {{-- Primary Accept Button --}}
                 <button @click="accept()" 
                         class="flex-1 py-3 bg-orbita-gold text-orbita-blue font-black rounded-xl hover:bg-white transition-all duration-300 uppercase text-[10px] tracking-widest shadow-lg">
                     Accept All
                 </button>
                 
-                {{-- Secondary Decline Button --}}
                 <button @click="show = false" 
                         class="px-5 py-3 text-gray-400 hover:text-white font-bold uppercase text-[10px] tracking-widest transition-colors">
                     Decline
                 </button>
             </div>
 
-            {{-- Links --}}
             <div class="mt-4 text-center">
                 <a href="{{ route('policy.privacy') }}" class="text-[9px] text-gray-500 uppercase tracking-widest hover:text-orbita-gold transition-colors underline decoration-gray-700">
                     Read our Privacy Policy
@@ -616,5 +610,39 @@
         </div>
     </div>
 </div>
+{{-- ==========================================
+         8. SEO CONTENT BLOCK (Crucial for Google Ranking)
+         ========================================== --}}
+    <section class="py-16 bg-white border-t border-gray-100">
+        <div class="container mx-auto px-4 max-w-5xl">
+            <div class="prose prose-sm md:prose-base prose-gray max-w-none text-gray-500 text-justify md:text-left leading-relaxed">
+                
+                <h2 class="text-2xl font-black text-orbita-blue uppercase tracking-tight mb-4">
+                    Premier Supplier of Hotel Smart Locks & Hospitality Technology in Kenya
+                </h2>
+                
+                <p class="mb-4">
+                    <strong>Orbita Kenya</strong> is the leading wholesale distributor of advanced hospitality security solutions and premium guest room amenities across East Africa. Based in Nairobi, we specialize in equipping hotels, resorts, and commercial properties with state-of-the-art <strong>RFID hotel door locks</strong>, robust EU mortise smart locks, and electronic digital room safes. Our hardware is engineered specifically for the rigorous security demands of the modern hospitality industry, ensuring the safety of your guests and the protection of your assets.
+                </p>
+
+                <h3 class="text-lg font-bold text-gray-800 uppercase tracking-tight mb-3 mt-8">
+                    Wholesale Hotel Minibars & Room Accessories
+                </h3>
+                
+                <p class="mb-4">
+                    Beyond security, we help hoteliers elevate the guest experience. Our comprehensive wholesale catalog features <strong>silent hotel minibars</strong>, energy-efficient absorption fridges, elegant welcome trays, electric kettles, and wall-mounted hair dryers. Whether you are outfitting a luxury boutique lodge in Mombasa or upgrading a 500-room corporate hotel in Nairobi, Orbita Kenya maintains the inventory, supply chain, and expertise to support projects of any scale.
+                </p>
+
+                <h3 class="text-lg font-bold text-gray-800 uppercase tracking-tight mb-3 mt-8">
+                    Why Choose Orbita Kenya for Your Project?
+                </h3>
+                
+                <p>
+                    Procuring from Orbita Kenya means partnering with the authorized regional distributor. We offer more than just premium hardware; our dedicated team provides comprehensive post-sale support, including <strong>professional lock installation</strong>, hotel management software training, and robust local warranties. By choosing local expertise, procurement managers eliminate international shipping headaches and ensure immediate technical support. Upgrade your property with Orbita today and join the elite network of secure, modern, and guest-ready hotels across Kenya.
+                </p>
+
+            </div>
+        </div>
+    </section>
 
 @endsection

@@ -9,16 +9,13 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class LowStockAlert extends BaseWidget
 {
-    // Position this after the sales stats
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 4; // Places it right below your Top Products
+    protected int | string | array $columnSpan = 'full'; // Stretches beautifully across the screen
     
-    // Set a heading for the widget
-    protected static ?string $heading = 'Low Stock Alerts (Restock Needed)';
+    // We can use a custom heading with an icon for urgency
+    protected static ?string $heading = '⚠️ Low Stock Alerts';
 
-    /**
-     * 🔒 PERMISSIONS: ONLY ADMIN
-     * Changing this to 'admin' only ensures it disappears for Sales Agents.
-     */
+    // Optional: Hide this widget entirely if the user is just a sales agent
     public static function canView(): bool
     {
         return auth()->user()->role === 'admin';
@@ -28,49 +25,47 @@ class LowStockAlert extends BaseWidget
     {
         return $table
             ->query(
-                // Only show active products with stock below 20
+                // ONLY pull products where stock is 5 or less, and order by the lowest stock first
                 Product::query()
                     ->where('is_active', true)
-                    ->where('stock_quantity', '<', 20)
+                    ->where('stock_quantity', '<=', 5)
                     ->orderBy('stock_quantity', 'asc')
             )
             ->columns([
                 Tables\Columns\ImageColumn::make('images')
-                    ->label('')
-                    ->circular()
-                    ->stacked()
-                    ->limit(1),
+                    ->label('Image')
+                    ->getStateUsing(function (Product $record) {
+                        return is_array($record->images) ? ($record->images[0] ?? null) : $record->images;
+                    })
+                    ->circular(),
 
                 Tables\Columns\TextColumn::make('name')
-                    ->label('Product')
+                    ->label('Product Name')
                     ->weight('bold')
-                    ->searchable()
-                    ->limit(30),
+                    ->searchable(),
 
+                Tables\Columns\TextColumn::make('sku')
+                    ->label('SKU')
+                    ->color('gray')
+                    ->copyable() // Lets you click the SKU to copy it instantly for reordering!
+                    ->copyMessage('SKU copied to clipboard'),
+
+                // The critical column: The actual stock number
                 Tables\Columns\TextColumn::make('stock_quantity')
-                    ->label('Quantity Left')
+                    ->label('Remaining Stock')
+                    ->size('lg')
+                    ->weight('black')
                     ->badge()
-                    ->color(fn (int $state): string => match (true) {
-                        $state <= 5 => 'danger',  // Critical
-                        $state <= 15 => 'warning', // Low
-                        default => 'gray',
-                    })
-                    ->suffix(' Units'),
-
-                Tables\Columns\TextColumn::make('category.name')
-                    ->label('Category')
-                    ->badge()
-                    ->color('info')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->color(fn (string $state): string => match (true) {
+                        $state == 0 => 'danger',   // Red: OUT OF STOCK
+                        $state <= 2 => 'warning',  // Orange: Critical
+                        default => 'primary',      // Gold/Primary: Getting low
+                    }),
             ])
-            ->actions([
-                // Quick link to edit the product (Restocking)
-                Tables\Actions\Action::make('update_stock')
-                    ->label('Restock')
-                    ->url(fn (Product $record): string => "/admin/products/{$record->id}/edit")
-                    ->icon('heroicon-m-plus-circle')
-                    ->color('success'), 
-            ])
-            ->paginated(false); 
+            // This is the magic "Empty State" design when all stock is healthy
+            ->emptyStateHeading('Inventory is Healthy')
+            ->emptyStateDescription('You have no active products running low on stock at the moment.')
+            ->emptyStateIcon('heroicon-o-shield-check')
+            ->paginated(false); // Keeps it as a clean, simple list
     }
 }

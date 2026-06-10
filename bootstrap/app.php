@@ -12,11 +12,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        
+        // Tell Laravel to trust Cloudflare's secure HTTPS headers
+        $middleware->trustProxies(at: '*');
+
         // CSRF Exception for IntaSend Webhook
         $middleware->validateCsrfTokens(except: [
             'api/intasend/webhook', 
             'api/payment/webhook',
         ]);
+        
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

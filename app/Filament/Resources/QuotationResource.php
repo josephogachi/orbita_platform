@@ -14,6 +14,7 @@ use Filament\Tables\Table;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 
 class QuotationResource extends Resource
 {
@@ -37,24 +38,31 @@ class QuotationResource extends Resource
                                     ->required(),
                                 Forms\Components\TextInput::make('client_name')
                                     ->required(),
+                                    
+                                // 🌟 FIX 1: Email is explicitly optional now
                                 Forms\Components\TextInput::make('client_email')
                                     ->email()
-                                    ->required(),
+                                    ->required(false)
+                                    ->label('Client Email (Optional)'), 
+                                    
                                 Forms\Components\TextInput::make('hotel_name'),
                                 Forms\Components\TextInput::make('client_phone')
+                                    ->label('WhatsApp Number')
+                                    ->placeholder('e.g. 0712345678')
                                     ->tel(),
                             ])->columns(2),
 
                         Forms\Components\Section::make('Inventory Items')
-                            ->description('Select products from your shop categories')
+                            ->description('Select a product to auto-fill, OR skip the dropdown and type a custom item below.')
                             ->schema([
                                 Forms\Components\Repeater::make('items')
                                     ->schema([
                                         Forms\Components\Select::make('product_id')
-                                            ->label('Select Product')
+                                            ->label('System Product (Optional)')
+                                            ->placeholder('Select to auto-fill...')
                                             ->options(Product::all()->pluck('name', 'id'))
                                             ->searchable()
-                                            ->reactive()
+                                            ->live()
                                             ->afterStateUpdated(function ($state, Forms\Set $set) {
                                                 $product = Product::find($state);
                                                 if ($product) {
@@ -62,32 +70,37 @@ class QuotationResource extends Resource
                                                     $set('price', $product->price);
                                                 }
                                             })
-                                            ->columnSpan(2),
+                                            ->columnSpan(4),
                                         
                                         Forms\Components\TextInput::make('description')
+                                            ->label('Item Name / Description')
                                             ->required()
-                                            ->hiddenLabel()
-                                            ->placeholder('Item Description')
+                                            ->placeholder('Type custom item name here...')
                                             ->columnSpan(2),
 
                                         Forms\Components\TextInput::make('quantity')
                                             ->numeric()
                                             ->default(1)
                                             ->required()
-                                            ->live(),
+                                            ->live()
+                                            ->afterStateUpdated(fn (Forms\Set $set, Forms\Get $get) => self::updateTotals($set, $get))
+                                            ->columnSpan(1),
 
                                         Forms\Components\TextInput::make('price')
+                                            ->label('Unit Price')
                                             ->numeric()
                                             ->prefix('KES')
                                             ->required()
-                                            ->live(),
+                                            ->live()
+                                            ->afterStateUpdated(fn (Forms\Set $set, Forms\Get $get) => self::updateTotals($set, $get))
+                                            ->columnSpan(1),
                                     ])
                                     ->columns(4)
                                     ->reorderable()
                                     ->cloneable()
                                     ->collapsible()
                                     ->itemLabel(fn (array $state): ?string => $state['description'] ?? 'New Item')
-                                    ->afterStateUpdated(fn (Forms\Set $set, Forms\Get $get) => self::updateTotals($set, $get)),
+                                    ->deleteAction(fn (Forms\Components\Actions\Action $action) => $action->after(fn(Forms\Set $set, Forms\Get $get) => self::updateTotals($set, $get)))
                             ]),
 
                         Forms\Components\Section::make('Additional Expenses & Services')
@@ -97,7 +110,7 @@ class QuotationResource extends Resource
                                     ->numeric()
                                     ->prefix('KES')
                                     ->default(0)
-                                    ->live()
+                                    ->live(debounce: 500)
                                     ->afterStateUpdated(fn (Forms\Set $set, Forms\Get $get) => self::updateTotals($set, $get)),
 
                                 Forms\Components\TextInput::make('shipping_fee')
@@ -105,14 +118,14 @@ class QuotationResource extends Resource
                                     ->numeric()
                                     ->prefix('KES')
                                     ->default(0)
-                                    ->live()
+                                    ->live(debounce: 500)
                                     ->afterStateUpdated(fn (Forms\Set $set, Forms\Get $get) => self::updateTotals($set, $get)),
 
                                 Forms\Components\Grid::make(2)
                                     ->schema([
                                         Forms\Components\Toggle::make('has_maintenance')
                                             ->label('Include Maintenance Subscription')
-                                            ->reactive()
+                                            ->live()
                                             ->afterStateUpdated(fn (Forms\Set $set, Forms\Get $get) => self::updateTotals($set, $get)),
 
                                         Forms\Components\TextInput::make('maintenance_fee')
@@ -121,7 +134,7 @@ class QuotationResource extends Resource
                                             ->prefix('KES')
                                             ->default(0)
                                             ->visible(fn ($get) => $get('has_maintenance'))
-                                            ->live()
+                                            ->live(debounce: 500)
                                             ->afterStateUpdated(fn (Forms\Set $set, Forms\Get $get) => self::updateTotals($set, $get)),
                                     ]),
                             ]),
@@ -142,11 +155,26 @@ class QuotationResource extends Resource
                                     ->required()
                                     ->native(false),
 
+                                // 🌟 FIX 2: VAT is fully optional and defaults to OFF
+                                Forms\Components\Toggle::make('is_vat_inclusive')
+                                    ->label('Apply 16% VAT')
+                                    ->onColor('success')
+                                    ->default(false) 
+                                    ->live()
+                                    ->afterStateUpdated(fn (Forms\Set $set, Forms\Get $get) => self::updateTotals($set, $get)),
+
                                 Forms\Components\TextInput::make('subtotal')
-                                    ->label('Products Subtotal')
+                                    ->label('Subtotal')
                                     ->numeric()
                                     ->prefix('KES')
                                     ->readonly(),
+
+                                Forms\Components\TextInput::make('vat_amount')
+                                    ->label('VAT (16%)')
+                                    ->numeric()
+                                    ->prefix('KES')
+                                    ->readonly()
+                                    ->visible(fn ($get) => $get('is_vat_inclusive')),
 
                                 Forms\Components\TextInput::make('total')
                                     ->label('Grand Total')
@@ -166,19 +194,24 @@ class QuotationResource extends Resource
             ])->columns(3);
     }
 
-    // 🟢 Dynamic Calculation Logic
     public static function updateTotals(Forms\Set $set, Forms\Get $get): void
     {
         $items = collect($get('items') ?? []);
-        $subtotal = $items->reduce(fn ($carry, $item) => $carry + ((float)($item['quantity'] ?? 0) * (float)($item['price'] ?? 0)), 0);
+        $itemsSubtotal = $items->reduce(fn ($carry, $item) => $carry + ((float)($item['quantity'] ?? 0) * (float)($item['price'] ?? 0)), 0);
         
         $installation = (float)($get('installation_fee') ?? 0);
         $shipping = (float)($get('shipping_fee') ?? 0);
         $maintenance = $get('has_maintenance') ? (float)($get('maintenance_fee') ?? 0) : 0;
 
-        $grandTotal = $subtotal + $installation + $shipping + $maintenance;
+        $subtotal = $itemsSubtotal + $installation + $shipping + $maintenance;
+        
+        // 🌟 Only applies VAT if the toggle is checked
+        $vatAmount = $get('is_vat_inclusive') ? ($subtotal * 0.16) : 0; 
+        
+        $grandTotal = $subtotal + $vatAmount;
 
         $set('subtotal', $subtotal);
+        $set('vat_amount', $vatAmount);
         $set('total', $grandTotal);
     }
 
@@ -201,7 +234,8 @@ class QuotationResource extends Resource
                     ->sortable()
                     ->weight('bold'),
 
-                Tables\Columns\BadgeColumn::make('status')
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
                     ->colors([
                         'warning' => 'pending',
                         'info' => 'reviewed',
@@ -218,11 +252,35 @@ class QuotationResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
 
-                Tables\Actions\Action::make('send_email')
-                    ->label('Send')
-                    ->icon('heroicon-o-paper-airplane')
+                // 🌟 FIX 3: WhatsApp Action now securely generates the PDF Link
+                Tables\Actions\Action::make('share_whatsapp')
+                    ->label('WhatsApp')
+                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->color('success')
+                    ->url(function (Quotation $record) {
+                        $phone = preg_replace('/[^0-9]/', '', $record->client_phone ?? '');
+                        if (str_starts_with($phone, '0')) {
+                            $phone = '254' . substr($phone, 1);
+                        }
+                        
+                        $amount = number_format($record->total, 2);
+                        
+                        // Generates a fully qualified public URL (e.g. https://orbitakenya.com/quotations/1/download)
+                        $pdfLink = url("/quotations/{$record->id}/download");
+                        
+                        $message = "Hello {$record->client_name},\n\nHere is your quotation ({$record->quotation_number}) for KES {$amount}.\n\nYou can view and download your official document here: {$pdfLink}\n\nPlease let us know if you have any questions!\n\n- Orbita Kenya";
+                        
+                        return "https://wa.me/{$phone}?text=" . urlencode($message);
+                    })
+                    ->openUrlInNewTab()
+                    ->visible(fn (Quotation $record): bool => filled($record->client_phone)),
+
+                Tables\Actions\Action::make('send_email')
+                    ->label('Email')
+                    ->icon('heroicon-o-envelope')
+                    ->color('info')
                     ->requiresConfirmation()
+                    ->visible(fn (Quotation $record): bool => filled($record->client_email)) // Hide if no email
                     ->action(function (Quotation $record) {
                         try {
                             Mail::to($record->client_email)->send(new QuotationMail($record));

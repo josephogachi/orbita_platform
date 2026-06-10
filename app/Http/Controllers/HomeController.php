@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Category; // Added Category model import
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\ShopSetting;
@@ -40,6 +41,11 @@ class HomeController extends Controller
             ? Testimonial::where('is_active', true)->latest()->take(6)->get() 
             : collect();
 
+        // ADDED: Fetch Categories for the new Showcase Section
+        $categories = Schema::hasTable('categories') 
+            ? Category::all() // If you have an 'is_active' column, change this to Category::where('is_active', true)->get()
+            : collect();
+
         // 3. PRODUCT LOGIC
         if (Schema::hasTable('products')) {
             $baseProductQuery = Product::where('is_active', true)->with('category');
@@ -50,11 +56,13 @@ class HomeController extends Controller
             $newArrivals = $hotSelling = $sponsoredProducts = collect();
         }
 
+        // ADDED: 'categories' to the compact array so the view can access it
         return view('home', compact(
             'settings', 
             'promotions', 
             'sideAds', 
             'clients', 
+            'categories', // New variable passed to the view
             'newArrivals',
             'hotSelling',
             'sponsoredProducts',

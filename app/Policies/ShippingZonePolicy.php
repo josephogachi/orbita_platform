@@ -8,12 +8,20 @@ use Illuminate\Auth\Access\Response;
 
 class ShippingZonePolicy
 {
+    // 🛡️ Helper function to check if the user is the Main Admin
+    private function isAdmin(User $user): bool
+    {
+        return strtolower($user->role ?? '') === 'admin' 
+            || $user->id === 1 
+            || $user->email === 'support@orbitakenya.com';
+    }
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $this->isAdmin($user);
     }
 
     /**
@@ -21,7 +29,7 @@ class ShippingZonePolicy
      */
     public function view(User $user, ShippingZone $shippingZone): bool
     {
-        return false;
+        return $this->isAdmin($user);
     }
 
     /**
@@ -29,7 +37,7 @@ class ShippingZonePolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $this->isAdmin($user);
     }
 
     /**
@@ -37,7 +45,7 @@ class ShippingZonePolicy
      */
     public function update(User $user, ShippingZone $shippingZone): bool
     {
-        return false;
+        return $this->isAdmin($user);
     }
 
     /**
@@ -45,7 +53,7 @@ class ShippingZonePolicy
      */
     public function delete(User $user, ShippingZone $shippingZone): bool
     {
-        return false;
+        return $this->isAdmin($user);
     }
 
     /**
@@ -53,7 +61,7 @@ class ShippingZonePolicy
      */
     public function restore(User $user, ShippingZone $shippingZone): bool
     {
-        return false;
+        return $this->isAdmin($user);
     }
 
     /**
@@ -61,6 +69,6 @@ class ShippingZonePolicy
      */
     public function forceDelete(User $user, ShippingZone $shippingZone): bool
     {
-        return false;
+        return $this->isAdmin($user);
     }
 }

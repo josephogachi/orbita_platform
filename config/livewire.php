@@ -62,24 +62,21 @@ return [
     | a global endpoint for temporary storage. You may configure this below:
     |
     */
-
-    'temporary_file_upload' => [
-    'disk' => null,
-    
-    // 🟢 CHANGE THIS LINE: Set max to 50MB (51200 KB) or 100MB (102400 KB)
-    // We also added 'pdf' to the mimes list just to be safe.
-    'rules' => ['file', 'mimes:png,jpg,jpeg,pdf', 'max:51200'], 
-
-    'directory' => null,
-    'middleware' => null,
-    'preview_mimes' => [
-        'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
-        'mov', 'avi', 'wmv', 'mp3', 'm4a',
-        'jpg', 'jpeg', 'mpga', 'webp', 'wma',
+'temporary_file_upload' => [
+        'disk' => null,
+        // 🌟 FIX: Added mp4 and removed the global 'required' rule so optional uploads don't break
+        'rules' => ['file', 'mimes:png,jpg,jpeg,gif,webp,pdf,doc,docx,xls,xlsx,csv,zip,txt,mp4', 'max:65536'],
+        'directory' => null,
+        'middleware' => null,
+        'preview_mimes' => [
+            'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
+            'mov', 'avi', 'wmv', 'mp3', 'm4a',
+            'jpg', 'jpeg', 'mpga', 'webp', 'wma',
+        ],
+        'max_upload_time' => 15,
+        'cleanup' => true,
     ],
-    'max_upload_time' => 5,
-    'cleanup' => true,
-],
+
     /*
     |---------------------------------------------------------------------------
     | Render On Redirect

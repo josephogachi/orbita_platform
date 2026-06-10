@@ -10,6 +10,7 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -27,45 +28,43 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->favicon(asset('favicon.png'))
+            ->passwordReset() 
+            ->profile()        
             
-            // --- Orbita Branding & UI Refinement ---
             ->brandName('Orbita Kenya')
-            // If you have a logo file, uncomment the line below:
-            // ->brandLogo(asset('images/logo.png')) 
             ->brandLogoHeight('2.5rem')
-            ->favicon(asset('favicon.ico'))
             
-            // Setting the theme colors to match your classy frontend
             ->colors([
-                'primary' => '#C5A059', // Orbita Gold
-                'gray' => Color::Slate,
-                'info' => Color::Blue,
+                'primary' => Color::hex('#C5A059'), // Professional Gold/Brass for Orbita
+                'gray'    => Color::Slate,
+                'info'    => Color::Blue,
                 'success' => Color::Emerald,
                 'warning' => Color::Orange,
-                'danger' => Color::Rose,
+                'danger'  => Color::Rose,
             ])
             
-            // Professional UX Settings
             ->font('Plus Jakarta Sans')
             ->sidebarCollapsibleOnDesktop()
-            ->maxContentWidth('full') 
-            ->databaseNotifications() // Enables the bell icon for notifications
+            ->maxContentWidth(MaxWidth::Full)
+
+            // 🔔 NOTIFICATIONS SETUP
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s') // Auto-check for new leads every 30s
             
-            // --- Resource Discovery ---
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
             ])
             
-            // --- Widget Discovery ---
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                // Removed FilamentInfoWidget for a cleaner, more custom look
+                // Widgets\AccountWidget::class,
+                // The LeadStatsOverview widget will appear here automatically 
+                // once created in the Widgets folder.
             ])
             
-            // --- Middleware ---
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

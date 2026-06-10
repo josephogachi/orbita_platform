@@ -2,74 +2,67 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\OrderItem;
+use App\Models\Product;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Model;
 
 class TopProducts extends BaseWidget
 {
-    protected static ?int $sort = 2;
-    protected int | string | array $columnSpan = 'full';
-
-    /**
-     * 🔒 SECURITY: Only Admins can see the Top Products (Revenue) widget.
-     * This ensures Sales Agents focus on their individual leads and projects.
-     */
-    public static function canView(): bool
-    {
-        return auth()->user()->role === 'admin';
-    }
-
-    /**
-     * This method resolves the "Return value must be of type string, null returned" error.
-     * Since the query uses groupBy, the standard 'id' is missing. 
-     * We tell Filament to use 'product_id' as the unique key instead.
-     */
-    public function getTableRecordKey(Model $record): string
-    {
-        return (string) $record->product_id;
-    }
+    protected static ?int $sort = 3; // Places it neatly under your charts
+    protected int | string | array $columnSpan = 'full'; // Stretches across the dashboard
+    protected static ?string $heading = 'Premium Catalog Overview';
 
     public function table(Table $table): Table
     {
         return $table
             ->query(
-                OrderItem::query()
-                    ->select(
-                        'product_id', 
-                        DB::raw('SUM(quantity) as total_qty'), 
-                        // Using unit_price from your migration for accurate revenue
-                        DB::raw('SUM(quantity * unit_price) as revenue') 
-                    )
-                    ->groupBy('product_id')
-                    ->orderBy('total_qty', 'desc')
+                // Pulls the top 5 most recently updated active products
+                Product::query()
+                    ->where('is_active', true)
+                    ->orderBy('updated_at', 'desc')
                     ->limit(5)
             )
             ->columns([
-                Tables\Columns\ImageColumn::make('product.images')
+                // 1. Product Thumbnail Image
+                Tables\Columns\ImageColumn::make('images')
                     ->label('Image')
+                    ->getStateUsing(function (Product $record) {
+                        // Safely grabs the first image from your JSON array
+                        return is_array($record->images) ? ($record->images[0] ?? null) : $record->images;
+                    })
                     ->circular()
-                    ->stacked()
-                    ->limit(1),
+                    ->stacked(),
 
-                Tables\Columns\TextColumn::make('product.name')
+                // 2. Product Name
+                Tables\Columns\TextColumn::make('name')
                     ->label('Product Name')
                     ->weight('bold')
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('total_qty')
-                    ->label('Units Sold')
+                // 3. SKU Badge
+                Tables\Columns\TextColumn::make('sku')
+                    ->label('SKU')
                     ->badge()
-                    ->color('info')
-                    ->sortable(),
+                    ->color('gray'),
 
-                Tables\Columns\TextColumn::make('revenue')
-                    ->label('Total Revenue')
-                    ->money('KES')
-                    ->sortable(),
-            ]);
+                // 4. Formatted Price
+                Tables\Columns\TextColumn::make('price')
+                    ->label('Price')
+                    ->money('KES') // Automatically formats as KES 15,000.00
+                    ->weight('bold')
+                    ->color('primary'),
+
+                // 5. Dynamic Color-Coded Stock Indicator
+                Tables\Columns\TextColumn::make('stock_quantity')
+                    ->label('Stock Level')
+                    ->badge()
+                    ->color(fn (string $state): string => match (true) {
+                        $state <= 0 => 'danger',   // Red if out of stock
+                        $state <= 5 => 'warning',  // Yellow/Orange if running low
+                        default => 'success',      // Green if healthy
+                    }),
+            ])
+            ->paginated(false); // Removes the next/previous buttons for a cleaner dashboard look
     }
 }

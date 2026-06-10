@@ -3,7 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ClientResource\Pages;
-use App\Models\Client;
+use App\Models\Client; // 1. CHANGE THIS from User::class to Client::class
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -12,66 +12,41 @@ use Filament\Tables\Table;
 
 class ClientResource extends Resource
 {
-    protected static ?string $model = Client::class;
-    
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationGroup = 'Website Content';
-    protected static ?int $navigationSort = 2;
-    protected static ?string $navigationLabel = 'Partners & Clients';
-
-    /**
-     * 🔒 SECURITY: HARD-CODE "ADMIN ONLY" ACCESS
-     * This ensures Sales Agents (or anyone else) CANNOT see this menu item.
-     */
-    public static function canViewAny(): bool
-    {
-        return auth()->user()->role === 'admin';
-    }
+    // 2. Point to the Client model
+    protected static ?string $model = Client::class; 
+    protected static ?string $navigationIcon = 'heroicon-o-briefcase';
+    protected static ?string $navigationGroup = 'Site Content';
+    protected static ?string $navigationLabel = 'Clients';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Client / Partner Details')
-                    ->description('These logos appear in the "Trusted By" marquee on the homepage.')
+                Forms\Components\Section::make('Client Information')
                     ->schema([
-                        Forms\Components\Grid::make(2)->schema([
-                            Forms\Components\TextInput::make('name')
-                                ->label('Company Name')
-                                ->placeholder('e.g., Sarova Hotels')
-                                ->required()
-                                ->maxLength(255),
+                        Forms\Components\TextInput::make('name')
+                            ->required()
+                            ->maxLength(255),
+                            
+                        Forms\Components\TextInput::make('website')
+                            ->url()
+                            ->maxLength(255),
 
-                            Forms\Components\TextInput::make('website')
-                                ->label('Client Website (Optional)')
-                                ->url()
-                                ->prefix('https://')
-                                ->placeholder('www.client-site.com'),
-                        ]),
-
+                        // THIS IS THE MISSING UPLOAD FIELD
                         Forms\Components\FileUpload::make('logo_path')
                             ->label('Client Logo')
                             ->image()
+                            ->directory('clients') // Images will go to storage/app/public/clients
                             ->imageEditor()
-                            ->disk('public')
-                            ->directory('clients')
-                            ->visibility('public')
-                            ->required()
-                            ->helperText('Preferred format: Transparent PNG.')
-                            ->columnSpanFull(),
+                            ->required(),
 
-                        Forms\Components\Grid::make(2)->schema([
-                            Forms\Components\Toggle::make('is_visible')
-                                ->label('Visible on Home Page')
-                                ->default(true)
-                                ->onColor('success'),
-
-                            Forms\Components\TextInput::make('sort_order')
-                                ->numeric()
-                                ->default(0)
-                                ->label('Priority Order'),
-                        ]),
-                    ])
+                        Forms\Components\Toggle::make('is_visible')
+                            ->default(true),
+                            
+                        Forms\Components\TextInput::make('sort_order')
+                            ->numeric()
+                            ->default(0),
+                    ])->columns(2),
             ]);
     }
 
@@ -81,39 +56,14 @@ class ClientResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('logo_path')
                     ->label('Logo')
-                    ->height(50)
-                    ->disk('public')
-                    ->extraAttributes(['style' => 'background-color: #f3f4f6; border-radius: 8px; padding: 4px; border: 1px solid #e5e7eb;']),
-                
-                Tables\Columns\TextColumn::make('name')
-                    ->label('Company')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold'),
-
-                Tables\Columns\TextColumn::make('website')
-                    ->label('Link')
-                    ->icon('heroicon-m-link')
-                    ->color('gray')
-                    ->url(fn ($state) => $state, true)
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\ToggleColumn::make('is_visible')
-                    ->label('Live Status'),
-
-                Tables\Columns\TextColumn::make('sort_order')
-                    ->label('Sort')
-                    ->sortable()
-                    ->badge(),
+                    ->circular(),
+                Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
+                Tables\Columns\IconColumn::make('is_visible')->boolean(),
+                Tables\Columns\TextColumn::make('sort_order')->sortable(),
             ])
-            ->defaultSort('sort_order', 'asc')
-            ->reorderable('sort_order')
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 

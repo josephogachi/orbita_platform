@@ -35,7 +35,7 @@ class PromotionResource extends Resource
                             Forms\Components\Select::make('type')
                                 ->label('Media Type')
                                 ->options([
-                                    'image' => 'Static Image (JPG/PNG)',
+                                    'image' => 'Static Image / GIF',
                                     'video' => 'Motion Video (MP4)',
                                 ])
                                 ->required()
@@ -46,11 +46,12 @@ class PromotionResource extends Resource
                         Forms\Components\FileUpload::make('file_path')
                             ->label('Banner Media')
                             ->directory('promotions')
-                            ->acceptedFileTypes(['image/*', 'video/mp4'])
+                            // 🌟 FIX 1: Explicitly allow GIFs and MP4s
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4'])
                             ->maxSize(51200) // 50MB
                             ->required()
-                            ->imageEditor() // Only applies if it's an image
-                            ->helperText('Images should be 1920x1080 for best results. Videos must be MP4.')
+                            // 🌟 FIX 2: Removed ->imageEditor() which was destroying GIFs and crashing MP4 uploads
+                            ->helperText('Images/GIFs should be 1920x1080. Videos must be MP4 (Max 50MB).')
                             ->columnSpanFull(),
 
                         Forms\Components\Grid::make(2)->schema([
@@ -87,8 +88,9 @@ class PromotionResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('file_path')
                     ->label('Preview')
-                    ->visibility(fn ($record) => $record->type === 'image') // Preview image if type is image
-                    ->placeholder('Video File')
+                    // 🌟 FIX 3: Ensures GIFs animate in the table by treating them as raw URLs instead of resizing
+                    ->getStateUsing(fn ($record) => $record->type === 'image' ? asset('storage/' . $record->file_path) : null)
+                    ->placeholder('🎥 Video')
                     ->square()
                     ->size(60),
 

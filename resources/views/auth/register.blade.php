@@ -58,6 +58,15 @@
                            class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-orbita-blue/10 transition-all text-sm font-bold text-gray-700 placeholder-gray-300" placeholder="email@example.com">
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
+                
+                {{-- 📱 Phone Number Field --}}
+<div class="space-y-2">
+    <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400">Phone Number (M-Pesa)</label>
+    <input id="phone" type="text" name="phone" value="{{ old('phone') }}" required
+           class="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-orbita-blue/10 transition-all text-sm font-bold text-gray-700 placeholder-gray-300" 
+           placeholder="0712 345 678">
+    <x-input-error :messages="$errors->get('phone')" class="mt-2" />
+</div>
 
                 <div class="space-y-2">
                     <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400">Secure Password</label>

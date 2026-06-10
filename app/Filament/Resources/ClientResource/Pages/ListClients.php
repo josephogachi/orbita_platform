@@ -13,7 +13,9 @@ class ListClients extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            // This adds the "New Client" button to the top right
+            Actions\CreateAction::make()
+                ->label('New Client'),
         ];
     }
 }
